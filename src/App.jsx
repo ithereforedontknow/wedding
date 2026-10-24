@@ -447,9 +447,6 @@ END:VCALENDAR`;
         <BotanicalBranch className="absolute top-0 right-0 w-44 md:w-72 scale-x-[-1] opacity-60" />
 
         <div className="max-w-4xl mx-auto relative z-20">
-          <div className="inline-block px-4 py-1.5 mb-4 rounded-full bg-white/70 border border-[#9792e3]/30 text-xs font-semibold tracking-widest uppercase text-[#9792e3] shadow-sm">
-            Save Our Date • July 17, 2027
-          </div>
 
           <h1 className="text-6xl sm:text-7xl md:text-9xl font-script text-[#48435c] drop-shadow-sm leading-tight">
             Enjelaine <span className="text-[#9792e3] font-serif-elegant font-light">&</span> Erwin
