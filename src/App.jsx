@@ -206,7 +206,7 @@ export default function WeddingApp() {
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
 
   // Target Date for Summer Wedding (e.g., July 17, 2027 16:00:00)
-  const targetDate = new Date("2027-07-17T16:00:00").getTime();
+  const targetDate = new Date("2027-04-10T14:00:00").getTime();
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -309,7 +309,7 @@ export default function WeddingApp() {
 
   // Google Calendar Link Generator
   const generateGoogleCalendarUrl = () => {
-    const title = encodeURIComponent("Eleanor & Julian's Summer Wedding");
+    const title = encodeURIComponent("Enjelaine & Erwin's Summer Wedding");
     const details = encodeURIComponent(
       "Join us for our wedding ceremony, garden cocktail reception, and starlight dinner celebration!"
     );
@@ -325,14 +325,14 @@ export default function WeddingApp() {
   const handleDownloadICS = () => {
     const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Eleanor and Julian Wedding//EN
+PRODID:-//Enjelaine and Erwin Wedding//EN
 BEGIN:VEVENT
-UID:${Date.now()}@eleanorandjulian.com
+UID:${Date.now()}@enjelaineanderwin.com
 DTSTAMP:20261024T120000Z
 DTSTART:20270717T230000Z
 DTEND:20270718T060000Z
-SUMMARY:Eleanor & Julian's Wedding
-DESCRIPTION:Celebration of Eleanor & Julian's marriage at Willow Creek Estate.
+SUMMARY:Enjelaine & Erwin's Wedding
+DESCRIPTION:Celebration of Enjelaine & Erwin's marriage at Willow Creek Estate.
 LOCATION:Willow Creek Botanical Estate, Sonoma, CA
 STATUS:CONFIRMED
 END:VEVENT
@@ -342,7 +342,7 @@ END:VCALENDAR`;
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "Eleanor-Julian-Wedding.ics");
+    link.setAttribute("download", "Enjelaine-Erwin-Wedding.ics");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -386,7 +386,7 @@ END:VCALENDAR`;
                 You Are Cordially Invited
               </span>
               <h2 className="text-4xl md:text-5xl font-script text-[#48435c] mt-1">
-                Eleanor & Julian
+                Enjelaine & Erwin
               </h2>
               <p className="text-xs font-light text-[#5A5766] mt-1 font-serif-elegant italic">
                 Saturday, the Seventeenth of July • Sonoma Valley
@@ -422,7 +422,7 @@ END:VCALENDAR`;
                       <div className="w-full h-full rounded-full border border-dashed border-[#EDFFEC]/50 flex flex-col items-center justify-center text-[#EDFFEC]">
                         <Heart className="w-5 h-5 fill-[#61E786] text-[#61E786] mb-0.5 group-hover:scale-125 transition-transform" />
                         <span className="font-serif-elegant text-xs tracking-wider uppercase font-semibold">
-                          E & J
+                          E & E
                         </span>
                       </div>
                     </div>
@@ -452,7 +452,7 @@ END:VCALENDAR`;
           </div>
 
           <h1 className="text-6xl sm:text-7xl md:text-9xl font-script text-[#48435c] drop-shadow-sm leading-tight">
-            Eleanor <span className="text-[#9792e3] font-serif-elegant font-light">&</span> Julian
+            Enjelaine <span className="text-[#9792e3] font-serif-elegant font-light">&</span> Erwin
           </h1>
 
           <p className="mt-4 text-lg md:text-2xl font-serif-elegant italic text-[#5A5766] max-w-xl mx-auto">
@@ -462,17 +462,17 @@ END:VCALENDAR`;
           <div className="flex flex-wrap items-center justify-center gap-6 mt-6 text-sm text-[#48435c] font-medium">
             <span className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4 text-[#9792e3]" />
-              Saturday, July 17, 2027
+              Saturday, April 10, 2027
             </span>
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#61E786]"></span>
             <span className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-[#9792e3]" />
-              4:00 PM PST
+              2:00 PM PST
             </span>
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#61E786]"></span>
             <span className="flex items-center gap-1.5">
               <MapPin className="w-4 h-4 text-[#9792e3]" />
-              Willow Creek Botanical Estate, Sonoma
+              Casa De Hufana
             </span>
           </div>
 
@@ -571,7 +571,7 @@ END:VCALENDAR`;
             Order of Events
           </h2>
           <p className="text-sm font-medium text-[#5A5766] mt-2">
-            Saturday, July 17, 2027 • Willow Creek Estate
+            Saturday, April 10, 2027 • Casa De Hufana
           </p>
         </div>
 
@@ -908,7 +908,7 @@ END:VCALENDAR`;
             Watercolor Guestbook Wall
           </h2>
           <p className="text-xs sm:text-sm font-medium text-[#5A5766] mt-2">
-            Pin your sweet wishes, blessings, or favorite memories for Eleanor and Julian.
+            Pin your sweet wishes, blessings, or favorite memories for Enjelaine and Erwin.
           </p>
         </div>
 
@@ -1068,7 +1068,7 @@ END:VCALENDAR`;
                   required
                   value={rsvpData.fullName}
                   onChange={(e) => setRsvpData({ ...rsvpData, fullName: e.target.value })}
-                  placeholder="Eleanor Vance"
+                  placeholder="Enjelaine Cabilatazan"
                   className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
                 />
               </div>
@@ -1081,7 +1081,7 @@ END:VCALENDAR`;
                   required
                   value={rsvpData.email}
                   onChange={(e) => setRsvpData({ ...rsvpData, email: e.target.value })}
-                  placeholder="eleanor@example.com"
+                  placeholder="enjelaine@example.com"
                   className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
                 />
               </div>
@@ -1209,7 +1209,7 @@ END:VCALENDAR`;
                       Official Guest Pass
                     </span>
                     <h4 className="font-serif-elegant font-bold text-lg text-[#48435c]">
-                      Eleanor & Julian’s Wedding
+                      Enjelaine & Erwin’s Wedding
                     </h4>
                   </div>
                   <Sparkles className="w-5 h-5 text-[#61E786]" />
@@ -1270,10 +1270,10 @@ END:VCALENDAR`;
       <footer className="py-12 px-4 text-center border-t border-[#9792e3]/20 relative z-20">
         <BotanicalBranch className="w-24 mx-auto mb-2 opacity-50" />
         <h3 className="text-3xl font-script text-[#48435c]">
-          Eleanor & Julian
+          Enjelaine & Erwin
         </h3>
         <p className="text-xs text-[#5A5766] mt-1 font-serif-elegant italic">
-          Forever in Bloom • Sonoma Valley, California
+          Forever in Bloom • Agoo, La Union
         </p>
         <p className="text-[10px] text-[#9792e3] mt-4 uppercase tracking-widest font-semibold">
           Crafted with love for an unforgettable summer
