@@ -1267,17 +1267,11 @@ END:VCALENDAR`;
       {/* =========================================================================
           9. FOOTER
       ========================================================================= */}
-      <footer className="py-12 px-4 text-center border-t border-[#9792e3]/20 relative z-20">
+      <footer className="py-12 px-4 text-center border-[#9792e3]/20 relative z-20 select-none">
         <BotanicalBranch className="w-24 mx-auto mb-2 opacity-50" />
-        <h3 className="text-3xl font-script text-[#48435c]">
+        <h3 className="text-9xl font-script text-[#48435c]">
           Enjelaine & Erwin
         </h3>
-        <p className="text-xs text-[#5A5766] mt-1 font-serif-elegant italic">
-          Forever in Bloom • Agoo, La Union
-        </p>
-        <p className="text-[10px] text-[#9792e3] mt-4 uppercase tracking-widest font-semibold">
-          Crafted with love for an unforgettable summer
-        </p>
       </footer>
     </div>
   );
