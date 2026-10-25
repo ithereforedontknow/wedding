@@ -1264,12 +1264,13 @@ END:VCALENDAR`;
       {/* =========================================================================
           9. FOOTER
       ========================================================================= */}
-      <footer className="py-12 px-4 text-center border-[#9792e3]/20 relative z-20 select-none">
-        <BotanicalBranch className="w-24 mx-auto mb-2 opacity-50" />
-        <h3 className="text-9xl font-script text-[#48435c]">
+      <footer className="relative z-20 select-none border-[#9792e3]/20 px-4 py-8 text-center sm:py-12 md:py-16">
+        <BotanicalBranch className="mx-auto mb-2 w-16 opacity-50 sm:w-20 md:w-24" />
+        <h3 className="font-script text-5xl text-[#48435c] sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
           Enjelaine & Erwin
         </h3>
       </footer>
+
     </div>
   );
 }
