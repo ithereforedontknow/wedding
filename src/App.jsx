@@ -70,10 +70,6 @@ const StyleInjector = () => (
       animation: pulse-subtle 3s infinite ease-in-out;
     }
 
-    /* Envelope unfolding flaps */
-    .perspective-1000 {
-      perspective: 1000px;
-    }
   `}</style>
 );
 
@@ -105,12 +101,12 @@ const BotanicalBranch = ({ className = "" }) => (
 );
 
 // --- Floating Petal Canvas Component ---
-const WatercolorPetalsCanvas = () => {
+const WatercolorPetalsCanvas = ({ active = true }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !active) return;
     const ctx = canvas.getContext("2d");
     let animationFrameId;
 
@@ -186,7 +182,7 @@ const WatercolorPetalsCanvas = () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, []);
+  }, [active]);
 
   return (
     <canvas
@@ -196,17 +192,10 @@ const WatercolorPetalsCanvas = () => {
   );
 };
 
-// --- Main App Component ---
-export default function WeddingApp() {
-  // Envelope unsealing state
-  const [isOpened, setIsOpened] = useState(false);
-  const [isUnfolding, setIsUnfolding] = useState(false);
+// --- Countdown Badge Component ---
+const WEDDING_DATE = new Date("2027-04-10T14:00:00").getTime();
 
-  // Audio atmosphere simulation toggle
-  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
-
-  // Target Date for Summer Wedding (e.g., July 17, 2027 16:00:00)
-  const targetDate = new Date("2027-04-10T14:00:00").getTime();
+const CountdownBadge = ({ targetDate }) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -215,9 +204,8 @@ export default function WeddingApp() {
   });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const difference = targetDate - now;
+    const updateCountdown = () => {
+      const difference = targetDate - Date.now();
 
       if (difference > 0) {
         setTimeLeft({
@@ -227,17 +215,102 @@ export default function WeddingApp() {
           seconds: Math.floor((difference / 1000) % 60)
         });
       }
-    }, 1000);
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
     return () => clearInterval(timer);
   }, [targetDate]);
 
+  return (
+    <div className="mt-14 max-w-lg mx-auto bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-[#9792e3]/30 shadow-md">
+      <h3 className="text-xs uppercase tracking-widest text-[#9792e3] font-semibold mb-4">
+        Counting Down to Forever
+      </h3>
+      <div className="grid grid-cols-4 gap-3 text-center">
+        {[
+          { label: "Days", val: timeLeft.days },
+          { label: "Hours", val: timeLeft.hours },
+          { label: "Minutes", val: timeLeft.minutes },
+          { label: "Seconds", val: timeLeft.seconds }
+        ].map((item, idx) => (
+          <div
+            key={idx}
+            className="flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-b from-[#EDFFEC] to-white border border-[#9792e3]/20 shadow-inner"
+          >
+            <span className="text-2xl sm:text-3xl font-serif-elegant font-bold text-[#48435c]">
+              {String(item.val).padStart(2, "0")}
+            </span>
+            <span className="text-[10px] tracking-wider uppercase font-semibold text-[#5A5766] mt-1">
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Main App Component ---
+export default function WeddingApp() {
+  // Envelope opening phases: sealed -> unsealing -> revealing -> opened
+  const [phase, setPhase] = useState("sealed");
+  const isSealed = phase === "sealed";
+  const isUnsealing = phase === "unsealing";
+  const isRevealing = phase === "revealing";
+  const isOpened = phase === "opened";
+  const prefersReducedMotion = useRef(false);
+  const envelopeOpening = isUnsealing || isRevealing;
+
+  // Audio atmosphere simulation toggle
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+
+  // Track reduced-motion preference for a shorter opening sequence
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    prefersReducedMotion.current = mediaQuery.matches;
+
+    const handleChange = (event) => {
+      prefersReducedMotion.current = event.matches;
+    };
+
+    mediaQuery.addEventListener?.("change", handleChange);
+    return () => mediaQuery.removeEventListener?.("change", handleChange);
+  }, []);
+
+  // Advance the envelope sequence automatically
+  useEffect(() => {
+    if (phase !== "unsealing" && phase !== "revealing") return;
+
+    const reduced = prefersReducedMotion.current;
+    const delay = phase === "unsealing" ? (reduced ? 120 : 1150) : (reduced ? 120 : 550);
+
+    const timer = setTimeout(() => {
+      setPhase((current) =>
+        current === "unsealing" ? "revealing" : current === "revealing" ? "opened" : current
+      );
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  // Keep the page behind the sealed envelope from scrolling
+  useEffect(() => {
+    if (isOpened) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpened]);
+
   // Handle Envelope Opening
   const handleOpenInvitation = () => {
-    setIsUnfolding(true);
-    setTimeout(() => {
-      setIsOpened(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 1200);
+    if (phase !== "sealed") return;
+    window.scrollTo(0, 0);
+    setPhase("unsealing");
   };
 
   // Travel tabs state
@@ -351,7 +424,7 @@ END:VCALENDAR`;
   return (
     <div className="min-h-screen watercolor-canvas font-body text-[#5A5766] selection:bg-[#9792e3] selection:text-white relative overflow-x-hidden">
       <StyleInjector />
-      <WatercolorPetalsCanvas />
+      <WatercolorPetalsCanvas active={isRevealing || isOpened} />
 
       {/* Background Ambience Audio Toggle Button */}
       <div className="fixed top-5 right-5 z-40">
@@ -378,14 +451,32 @@ END:VCALENDAR`;
           1. INTERACTIVE ENVELOPE & WAX SEAL UNVEILING MODAL (FIRST IMPRESSION)
       ========================================================================= */}
       {!isOpened && (
-        <section className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#EDFFEC]/95 backdrop-blur-md transition-opacity duration-1000">
-          <div className="relative w-full max-w-lg perspective-1000">
+        <section
+          className={`envelope-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#EDFFEC]/95 ${
+            isRevealing ? "is-revealing" : ""
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="invitation-title"
+        >
+          <div
+            className={`envelope-stage-shell relative w-full max-w-lg ${
+              isRevealing ? "is-revealing" : ""
+            }`}
+          >
             {/* Romantic Intro Caption */}
-            <div className="text-center mb-6">
+            <div
+              className={`envelope-caption text-center mb-6 ${
+                envelopeOpening ? "is-leaving" : ""
+              }`}
+            >
               <span className="text-[#9792e3] uppercase tracking-widest text-xs font-semibold">
                 You Are Cordially Invited
               </span>
-              <h2 className="text-4xl md:text-5xl font-script text-[#48435c] mt-1">
+              <h2
+                id="invitation-title"
+                className="text-4xl md:text-5xl font-script text-[#48435c] mt-1"
+              >
                 Enjelaine & Erwin
               </h2>
               <p className="text-xs font-light text-[#5A5766] mt-1 font-serif-elegant italic">
@@ -393,45 +484,117 @@ END:VCALENDAR`;
               </p>
             </div>
 
-            {/* Envelope Body */}
-            <div
-              className={`relative bg-[#f8fffa] rounded-2xl shadow-2xl border border-[#9792e3]/30 overflow-hidden p-6 sm:p-8 transition-transform duration-1000 ${
-                isUnfolding ? "scale-95 translate-y-8 opacity-0" : "scale-100 opacity-100"
-              }`}
-            >
-              {/* Botanical Border Flourishes */}
-              <BotanicalBranch className="absolute -top-4 -left-6 w-32 rotate-12 opacity-80" />
-              <BotanicalBranch className="absolute -bottom-4 -right-6 w-32 -rotate-160 opacity-80" />
+            {/* Envelope */}
+            <div className="envelope-stage relative mx-auto w-full max-w-md aspect-[5/4]">
+              {/* Envelope back panel */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#f8fffa] via-[#f2fbf4] to-[#EDFFEC] border border-[#9792e3]/30 shadow-2xl" />
 
-              <div className="relative z-10 border border-dashed border-[#9792e3]/40 rounded-xl p-8 sm:p-10 text-center bg-white/70 backdrop-blur-sm">
-                <span className="font-serif-elegant italic text-sm text-[#9792e3] block mb-2">
-                  A Midsummer Celebration of Love
-                </span>
-                <p className="text-2xl sm:text-3xl font-serif-elegant font-normal text-[#48435c] mb-6">
-                  Will you join us in the garden under the stars?
-                </p>
+              {/* Envelope top flap */}
+              <div
+                className={`envelope-flap absolute inset-x-0 top-0 h-[58%] ${
+                  envelopeOpening ? "is-open" : ""
+                }`}
+              >
+                <div
+                  className="envelope-flap-face absolute inset-0"
+                  style={{
+                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                    background:
+                      "linear-gradient(165deg, #fbfffc 0%, #f2fbf4 55%, #e6f9eb 100%)",
+                    filter: "drop-shadow(0 5px 7px rgba(72, 67, 92, 0.13))"
+                  }}
+                />
+                <div
+                  className="envelope-flap-face absolute inset-0 opacity-70"
+                  style={{
+                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                    background:
+                      "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(151,146,227,0.06) 55%, rgba(97,231,134,0.14) 100%)"
+                  }}
+                />
+                <div
+                  className="envelope-flap-lining absolute inset-0"
+                  style={{
+                    clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                    background:
+                      "radial-gradient(circle at 28% 18%, rgba(151, 146, 227, 0.2) 0%, transparent 55%), linear-gradient(165deg, #f4f0ff 0%, #eaf8ef 55%, #dcefe3 100%)",
+                    filter: "drop-shadow(0 5px 7px rgba(72, 67, 92, 0.13))"
+                  }}
+                />
+              </div>
 
-                {/* Wax Seal Button */}
-                <div className="flex flex-col items-center justify-center mt-6">
-                  <button
-                    onClick={handleOpenInvitation}
-                    className="group relative flex flex-col items-center focus:outline-none"
-                    aria-label="Break seal and open invitation"
-                  >
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-[#48435c] via-[#5c5675] to-[#9792e3] p-1 seal-pulse cursor-pointer shadow-lg hover:shadow-2xl transition-all flex items-center justify-center">
-                      <div className="w-full h-full rounded-full border border-dashed border-[#EDFFEC]/50 flex flex-col items-center justify-center text-[#EDFFEC]">
-                        <Heart className="w-5 h-5 fill-[#61E786] text-[#61E786] mb-0.5 group-hover:scale-125 transition-transform" />
-                        <span className="font-serif-elegant text-xs tracking-wider uppercase font-semibold">
-                          E & E
-                        </span>
-                      </div>
-                    </div>
-                    <span className="mt-4 text-xs tracking-widest uppercase font-semibold text-[#48435c] group-hover:text-[#9792e3] transition-colors flex items-center gap-1.5">
-                      <span>Click to Unseal</span>
-                      <Sparkles className="w-3.5 h-3.5 text-[#61E786]" />
-                    </span>
-                  </button>
+              {/* Invitation letter tucked inside */}
+              <div
+                className={`envelope-letter absolute inset-x-5 top-5 bottom-7 rounded-xl border border-[#9792e3]/25 bg-[#fffdf8] shadow-lg overflow-hidden ${
+                  envelopeOpening ? "is-out" : ""
+                }`}
+              >
+                <div className="h-full m-1.5 sm:m-2 p-4 sm:p-6 rounded-lg border border-dashed border-[#9792e3]/35 text-center flex flex-col items-center justify-center">
+                  <span className="font-serif-elegant italic text-[10px] sm:text-sm text-[#9792e3] block mb-1.5 sm:mb-2">
+                    A Midsummer Celebration of Love
+                  </span>
+                  <p className="text-lg sm:text-2xl font-serif-elegant font-normal text-[#48435c] leading-snug">
+                    Will you join us in the garden under the stars?
+                  </p>
+                  <div className="mt-3 sm:mt-5 flex items-center gap-2 text-[#61E786]">
+                    <span className="h-px w-6 sm:w-8 bg-[#9792e3]/40" />
+                    <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+                    <span className="h-px w-6 sm:w-8 bg-[#9792e3]/40" />
+                  </div>
+                  <span className="mt-1 sm:mt-2 font-script text-2xl sm:text-3xl text-[#48435c]">E & E</span>
                 </div>
+              </div>
+
+              {/* Envelope front pocket */}
+              <div className="absolute inset-x-0 bottom-0 top-[42%] overflow-hidden rounded-b-2xl">
+                <div
+                  className="absolute inset-0 bg-gradient-to-b from-[#eefcf2] to-[#e0f6e7]"
+                  style={{
+                    clipPath: "polygon(0 14%, 50% 0, 100% 14%, 100% 100%, 0 100%)"
+                  }}
+                />
+                <div
+                  className="absolute inset-0 opacity-70"
+                  style={{
+                    clipPath: "polygon(0 14%, 50% 0, 100% 14%, 100% 100%, 0 100%)",
+                    backgroundImage:
+                      "linear-gradient(135deg, transparent 49.4%, rgba(151,146,227,0.22) 50%, transparent 50.6%), linear-gradient(225deg, transparent 49.4%, rgba(151,146,227,0.22) 50%, transparent 50.6%)"
+                  }}
+                />
+              </div>
+
+              {/* Wax seal + unseal prompt */}
+              <div className="absolute inset-x-0 top-[44%] flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={handleOpenInvitation}
+                  disabled={!isSealed}
+                  className={`envelope-seal group relative flex flex-col items-center focus:outline-none ${
+                    envelopeOpening ? "is-broken" : ""
+                  }`}
+                  aria-label="Break seal and open invitation"
+                >
+                  <div
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#48435c] via-[#5c5675] to-[#9792e3] p-1 cursor-pointer shadow-lg hover:shadow-2xl transition-all flex items-center justify-center ${
+                      isSealed ? "seal-pulse" : ""
+                    }`}
+                  >
+                    <div className="w-full h-full rounded-full border border-dashed border-[#EDFFEC]/50 flex flex-col items-center justify-center text-[#EDFFEC]">
+                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-[#61E786] text-[#61E786] mb-0.5 group-hover:scale-125 transition-transform" />
+                      <span className="font-serif-elegant text-[10px] sm:text-xs tracking-wider uppercase font-semibold">
+                        E & E
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                <span
+                  className={`mt-2 text-[10px] sm:text-xs tracking-widest uppercase font-semibold text-[#48435c] flex items-center gap-1.5 transition-opacity duration-300 ${
+                    isSealed ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  <span>Click to Unseal</span>
+                  <Sparkles className="w-3.5 h-3.5 text-[#61E786]" />
+                </span>
               </div>
             </div>
           </div>
@@ -491,31 +654,7 @@ END:VCALENDAR`;
           </div>
 
           {/* Watercolor Circle Countdown Badge */}
-          <div className="mt-14 max-w-lg mx-auto bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-[#9792e3]/30 shadow-md">
-            <h3 className="text-xs uppercase tracking-widest text-[#9792e3] font-semibold mb-4">
-              Counting Down to Forever
-            </h3>
-            <div className="grid grid-cols-4 gap-3 text-center">
-              {[
-                { label: "Days", val: timeLeft.days },
-                { label: "Hours", val: timeLeft.hours },
-                { label: "Minutes", val: timeLeft.minutes },
-                { label: "Seconds", val: timeLeft.seconds }
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-b from-[#EDFFEC] to-white border border-[#9792e3]/20 shadow-inner"
-                >
-                  <span className="text-2xl sm:text-3xl font-serif-elegant font-bold text-[#48435c]">
-                    {String(item.val).padStart(2, "0")}
-                  </span>
-                  <span className="text-[10px] tracking-wider uppercase font-semibold text-[#5A5766] mt-1">
-                    {item.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CountdownBadge targetDate={WEDDING_DATE} />
         </div>
 
         <div className="mt-10 flex justify-center">
