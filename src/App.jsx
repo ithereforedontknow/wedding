@@ -117,42 +117,119 @@ const WatercolorPetalsCanvas = ({ active = true }) => {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
-    // Petal particles pool
-    const petalCount = 28;
-    const petals = [];
-    const colors = [
-      "rgba(151, 146, 227, 0.45)", // Soft Periwinkle
-      "rgba(97, 231, 134, 0.4)",  // Light Green
-      "rgba(200, 195, 255, 0.5)", // Lilac
-      "rgba(180, 245, 205, 0.45)" // Mint
+    // Soft watercolor palette (periwinkle, green, lilac, mint)
+    const palette = [
+      [151, 146, 227],
+      [97, 231, 134],
+      [200, 195, 255],
+      [180, 245, 205]
     ];
 
-    for (let i = 0; i < petalCount; i++) {
-      petals.push({
+    const petalCount = 28;
+    const petals = [];
+
+    const createPetal = (atTop = false) => {
+      const size = 11 + Math.random() * 10;
+      const [r, g, b] = palette[Math.floor(Math.random() * palette.length)];
+      const alpha = 0.28 + Math.random() * 0.2;
+      const petal = {
         x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 8 + 6,
-        speedY: Math.random() * 0.9 + 0.4,
-        speedX: Math.random() * 0.6 - 0.3,
+        y: atTop ? -size * 2 : Math.random() * canvas.height,
+        size,
+        aspect: 0.72 + Math.random() * 0.36,
+        speedY: 0.35 + Math.random() * 0.65,
+        speedX: Math.random() * 0.5 - 0.25,
         rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 1.5,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        oscillationSpeed: Math.random() * 0.02 + 0.01,
-        angle: Math.random() * Math.PI * 2
-      });
+        rotationSpeed: (Math.random() - 0.5) * 1.1,
+        oscillationSpeed: 0.008 + Math.random() * 0.014,
+        angle: Math.random() * Math.PI * 2,
+        flip: Math.random() * Math.PI * 2,
+        flipSpeed: 0.006 + Math.random() * 0.01,
+        alpha
+      };
+
+      // Cache gradients per petal so the animation stays smooth
+      petal.gradient = ctx.createLinearGradient(0, size, 0, -size);
+      petal.gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha * 0.45})`);
+      petal.gradient.addColorStop(0.55, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+      petal.gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, ${alpha * 0.85})`);
+
+      petal.glow = ctx.createRadialGradient(
+        -size * 0.18,
+        -size * 0.35,
+        size * 0.05,
+        0,
+        0,
+        size * 1.15
+      );
+      petal.glow.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.38})`);
+      petal.glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+
+      return petal;
+    };
+
+    for (let i = 0; i < petalCount; i++) {
+      petals.push(createPetal());
     }
 
     const drawPetal = (p) => {
+      const { size } = p;
+      const cosFlip = Math.cos(p.flip);
+      const width = p.aspect * (0.6 + Math.abs(cosFlip) * 0.4);
+
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate((p.rotation * Math.PI) / 180);
-      ctx.fillStyle = p.color;
+      // Flutter: squeeze the petal as it turns edge-on
+      ctx.scale(cosFlip < 0 ? -width : width, 1);
+
+      // Rounded petal with a tapered base
       ctx.beginPath();
-      // Organic watercolor teardrop/petal shape
-      ctx.moveTo(0, 0);
-      ctx.bezierCurveTo(p.size, -p.size * 0.8, p.size * 1.2, p.size * 0.8, 0, p.size * 1.6);
-      ctx.bezierCurveTo(-p.size * 1.2, p.size * 0.8, -p.size, -p.size * 0.8, 0, 0);
+      ctx.moveTo(0, size);
+      ctx.bezierCurveTo(
+        -size * 1.02,
+        size * 0.42,
+        -size * 0.98,
+        -size * 0.68,
+        -size * 0.32,
+        -size * 0.94
+      );
+      ctx.bezierCurveTo(
+        -size * 0.12,
+        -size * 1.04,
+        size * 0.12,
+        -size * 1.04,
+        size * 0.32,
+        -size * 0.94
+      );
+      ctx.bezierCurveTo(
+        size * 0.98,
+        -size * 0.68,
+        size * 1.02,
+        size * 0.42,
+        0,
+        size
+      );
+      ctx.closePath();
+
+      ctx.fillStyle = p.gradient;
       ctx.fill();
+
+      // Soft watercolor bloom inside the petal
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = p.glow;
+      ctx.fillRect(-size * 1.2, -size * 1.2, size * 2.4, size * 2.4);
+      ctx.restore();
+
+      // Faint center vein
+      ctx.beginPath();
+      ctx.moveTo(0, size * 0.55);
+      ctx.quadraticCurveTo(size * 0.08, -size * 0.15, 0, -size * 0.82);
+      ctx.strokeStyle = `rgba(255, 255, 255, ${p.alpha * 0.4})`;
+      ctx.lineWidth = Math.max(0.5, size * 0.055);
+      ctx.stroke();
+
       ctx.restore();
     };
 
@@ -160,13 +237,13 @@ const WatercolorPetalsCanvas = ({ active = true }) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       petals.forEach((p) => {
         p.angle += p.oscillationSpeed;
+        p.flip += p.flipSpeed;
         p.y += p.speedY;
-        p.x += Math.sin(p.angle) * 0.8 + p.speedX;
+        p.x += Math.sin(p.angle) * 0.7 + p.speedX;
         p.rotation += p.rotationSpeed;
 
-        if (p.y > canvas.height + 20) {
-          p.y = -20;
-          p.x = Math.random() * canvas.width;
+        if (p.y > canvas.height + p.size * 2) {
+          Object.assign(p, createPetal(true));
         }
         if (p.x > canvas.width + 20) p.x = -20;
         if (p.x < -20) p.x = canvas.width + 20;
@@ -187,7 +264,7 @@ const WatercolorPetalsCanvas = ({ active = true }) => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-10 w-full h-full"
+      className="pointer-events-none fixed inset-0 -z-10 h-full w-full"
     />
   );
 };
@@ -422,7 +499,7 @@ END:VCALENDAR`;
   };
 
   return (
-    <div className="min-h-screen watercolor-canvas font-body text-[#5A5766] selection:bg-[#9792e3] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen watercolor-canvas font-body text-[#5A5766] selection:bg-[#9792e3] selection:text-white relative isolate overflow-x-hidden">
       <StyleInjector />
       <WatercolorPetalsCanvas active={isRevealing || isOpened} />
 
@@ -1403,11 +1480,34 @@ END:VCALENDAR`;
       {/* =========================================================================
           9. FOOTER
       ========================================================================= */}
-      <footer className="relative z-20 select-none border-[#9792e3]/20 px-4 py-8 text-center sm:py-12 md:py-16">
-        <BotanicalBranch className="mx-auto mb-2 w-16 opacity-50 sm:w-20 md:w-24" />
-        <h3 className="font-script text-5xl text-[#48435c] sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
-          Enjelaine & Erwin
-        </h3>
+      <footer className="relative z-20 overflow-hidden px-4 pb-10 pt-6 sm:pb-16 sm:pt-10">
+        {/* Soft watercolor bloom behind the keepsake card */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_65%,rgba(97,231,134,0.14),rgba(151,146,227,0.08)_45%,transparent_72%)]" />
+
+        <div className="relative mx-auto max-w-5xl">
+          <div className="relative overflow-hidden rounded-[2rem] border border-[#9792e3]/30 bg-gradient-to-b from-white/80 via-white/70 to-[#f8fffa]/80 px-6 py-10 text-center shadow-[0_24px_70px_-40px_rgba(72,67,92,0.35)] backdrop-blur-md sm:px-10 sm:py-12 md:py-14">
+            {/* Inset stationery frame */}
+            <div className="pointer-events-none absolute inset-2 rounded-[1.6rem] border border-dashed border-[#9792e3]/30" />
+
+            {/* Botanical corners */}
+            <BotanicalBranch className="absolute -bottom-9 -left-9 w-32 rotate-12 opacity-25 sm:w-44" />
+            <BotanicalBranch className="absolute -bottom-9 -right-9 w-32 -rotate-12 scale-x-[-1] opacity-25 sm:w-44" />
+
+            <div className="relative">
+              <div className="flex items-center justify-center gap-3">
+                <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#9792e3]/50 sm:w-16" />
+                <Heart className="h-3.5 w-3.5 fill-[#61E786] text-[#61E786]" />
+                <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#9792e3]/50 sm:w-16" />
+              </div>
+
+              <h3 className="mt-4 font-script text-[clamp(2.1rem,10.5vw,3rem)] leading-tight text-[#48435c] sm:text-6xl md:text-7xl">
+                Enjelaine{" "}
+                <span className="font-serif-elegant font-light text-[#9792e3]">&</span>{" "}
+                Erwin
+              </h3>
+            </div>
+          </div>
+        </div>
       </footer>
 
     </div>
