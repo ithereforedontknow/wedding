@@ -107,6 +107,45 @@
   :root { --cover-scrub: 50svh; }
 }
 
+/* --- Cover fallbacks: no pinning without scroll choreography --- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .cover-spacer { height: auto; }
+
+  .cover-pin {
+    position: static;
+    height: auto;
+    padding: 2rem 1rem;
+  }
+
+  .cover-card {
+    height: auto;
+    min-height: var(--cover-height);
+    transform: none !important;
+  }
+
+  .inside-card { margin-top: 0; }
+}
+
+@media (max-height: 560px) {
+  .cover-spacer { height: auto; }
+
+  .cover-pin {
+    position: static;
+    height: auto;
+    padding: 1.5rem 1rem;
+  }
+
+  .cover-card {
+    height: auto;
+    min-height: min(82svh, 720px);
+    transform: none !important;
+  }
+
+  .inside-card { margin-top: 0; }
+}
+
 html {
     scroll-behavior: smooth;
 }
