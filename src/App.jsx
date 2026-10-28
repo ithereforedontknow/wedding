@@ -5,7 +5,6 @@ import {
   Send,
   Sparkles,
   Download,
-  Share2,
   CheckCircle2,
   UtensilsCrossed,
   Wine,
@@ -19,7 +18,7 @@ import FrontCover from "./components/FrontCover";
 import { SectionHeading } from "./components/SectionHeading";
 import { Reveal } from "./components/Reveal";
 import { WEDDING } from "./config";
-import { getWeddingTimestamp, buildGoogleCalendarUrl, buildIcsContent } from "./lib/wedding";
+import { getWeddingTimestamp, buildGoogleCalendarUrl, buildIcsContent, createPassCode } from "./lib/wedding";
 import { useScrollProgress } from "./hooks/useScrollProgress";
 
 // Timeline icon map for the schedule entries (keys match WEDDING.schedule icons)
@@ -324,6 +323,11 @@ export default function WeddingApp() {
   // Audio atmosphere simulation toggle
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
 
+  // Refs for focus management: the RSVP submit button regains focus
+  // when the pass modal closes; the modal close button takes focus on open.
+  const rsvpSubmitRef = useRef(null);
+  const passCloseButtonRef = useRef(null);
+
   // Scroll-scrubbed cover lift refs
   const coverSpacerRef = useRef(null);
   const coverPinRef = useRef(null);
@@ -395,7 +399,7 @@ export default function WeddingApp() {
   const [wishes, setWishes] = useState([
     {
       id: 1,
-      author: "Julian & Clara Vance",
+      author: "Clara & James",
       message: "May your summer love forever bloom with joy, laughter, and endless adventure!",
       date: "Just now",
       color: "#EDFFEC"
@@ -403,14 +407,14 @@ export default function WeddingApp() {
     {
       id: 2,
       author: "The Montgomery Family",
-      message: "Counting down the days to celebrate the happiest chapter of your lives in Sonoma!",
+      message: "Counting down the days to celebrate the happiest chapter of your lives in Agoo!",
       date: "2 hours ago",
       color: "#f6f3ff"
     },
     {
       id: 3,
       author: "Sofia Lin",
-      message: "To pure love, barefoot dancing in the vineyards, and a lifetime of summer sunsets. 💕",
+      message: "To pure love, barefoot dancing under the stars, and a lifetime of summer sunsets. 💕",
       date: "Yesterday",
       color: "#eefbee"
     }
@@ -442,18 +446,41 @@ export default function WeddingApp() {
     email: "",
     attending: "attending",
     guestCount: "1",
-    mealChoice: "Salmon with Summer Dill Velouté",
+    mealChoice: WEDDING.mealOptions[0],
     dietary: "",
     songRequest: ""
   });
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [passCode, setPassCode] = useState("");
   const [showPassModal, setShowPassModal] = useState(false);
 
-  const handleRsvpSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitted(true);
+  const handleRsvpSubmit = (event) => {
+    event.preventDefault();
+    setPassCode(createPassCode());
     setShowPassModal(true);
   };
+
+  // Focus management + Escape handling for the pass modal.
+  useEffect(() => {
+    if (!showPassModal) return;
+
+    passCloseButtonRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setShowPassModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showPassModal]);
+
+  // Return focus to the RSVP submit button when the pass modal closes.
+  useEffect(() => {
+    if (showPassModal) return;
+
+    rsvpSubmitRef.current?.focus();
+  }, [showPassModal]);
 
   // Google Calendar Link Generator
   const generateGoogleCalendarUrl = () => {
@@ -468,7 +495,7 @@ export default function WeddingApp() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "Enjelaine-Erwin-Wedding.ics");
+    link.setAttribute("download", `${WEDDING.partner1}-${WEDDING.partner2}-Wedding.ics`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -484,6 +511,7 @@ export default function WeddingApp() {
         <button
           onClick={() => setIsPlayingMusic(!isPlayingMusic)}
           aria-label="Toggle background ambience"
+          aria-pressed={isPlayingMusic}
           className="flex items-center gap-2 px-3 py-2 rounded-full watercolor-card border border-[#9792e3]/40 text-[#48435c] hover:bg-white transition-all shadow-sm text-xs font-medium"
         >
           {isPlayingMusic ? (
@@ -803,7 +831,7 @@ export default function WeddingApp() {
                   Watercolor Guestbook Wall
                 </h2>
                 <p className="text-xs sm:text-sm font-medium text-[#5A5766] mt-2">
-                  Pin your sweet wishes, blessings, or favorite memories for Enjelaine and Erwin.
+                  Pin your sweet wishes, blessings, or favorite memories for {WEDDING.partner1} and {WEDDING.partner2}.
                 </p>
               </div>
 
@@ -814,29 +842,37 @@ export default function WeddingApp() {
               >
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                    <label
+                      htmlFor="guestbook-name"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                    >
                       Your Name(s)
                     </label>
                     <input
                       type="text"
+                      id="guestbook-name"
                       required
                       value={newAuthor}
                       onChange={(e) => setNewAuthor(e.target.value)}
                       placeholder="e.g., Aunt Sophia & Uncle David"
-                      className="w-full px-4 py-2 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                      className="field w-full px-4 py-2 text-sm rounded-xl text-[#48435c]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                    <label
+                      htmlFor="guestbook-message"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                    >
                       Your Blessing or Note
                     </label>
                     <textarea
+                      id="guestbook-message"
                       required
                       rows={3}
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Write a warm note for the newlyweds..."
-                      className="w-full px-4 py-2 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                      className="field w-full px-4 py-2 text-sm rounded-xl text-[#48435c]"
                     />
                   </div>
 
@@ -855,6 +891,7 @@ export default function WeddingApp() {
                           onClick={() => setSelectedNoteWash(color.hex)}
                           style={{ backgroundColor: color.hex }}
                           aria-label={`Select ${color.name} background`}
+                          aria-pressed={selectedNoteWash === color.hex}
                           className={`w-6 h-6 rounded-full border transition-all ${
                             selectedNoteWash === color.hex
                               ? "border-[#48435c] scale-110 shadow-sm"
@@ -876,12 +913,12 @@ export default function WeddingApp() {
               </form>
 
               {/* Guestbook Canvas Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {wishes.map((wish) => (
                   <div
                     key={wish.id}
                     style={{ backgroundColor: wish.color }}
-                    className="relative p-6 rounded-2xl border border-[#9792e3]/30 shadow-sm transform hover:-translate-y-1 transition-all"
+                    className="relative p-6 rounded-2xl border border-[#9792e3]/30 shadow-[0_12px_30px_-24px_rgba(72,67,92,0.4)] transform hover:-translate-y-1 transition-all"
                   >
                     {/* Decorative Push-Pin / Wax Drop */}
                     <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[#9792e3] shadow-sm border border-white flex items-center justify-center">
@@ -893,7 +930,7 @@ export default function WeddingApp() {
                     </p>
                     <div className="mt-4 pt-3 border-t border-[#9792e3]/20 flex justify-between items-center text-[11px]">
                       <span className="font-semibold text-[#48435c]">{wish.author}</span>
-                      <span className="text-[#9792e3]">{wish.date}</span>
+                      <span className="text-[#6f68b8]">{wish.date}</span>
                     </div>
                   </div>
                 ))}
@@ -902,8 +939,8 @@ export default function WeddingApp() {
 
             {/* 7. INTERACTIVE RSVP FORM */}
             <Reveal as="section" id="rsvp-section" className="mx-auto max-w-2xl">
-              <div className="watercolor-card rounded-3xl p-8 sm:p-12 relative overflow-hidden border border-[#9792e3]/40 shadow-xl">
-                <BotanicalBranch className="absolute -top-6 -right-6 w-36 rotate-45 opacity-40" />
+              <div className="relative overflow-hidden rounded-[1.5rem] border border-dashed border-[#7d77cc]/50 bg-white/60 p-6 sm:p-8">
+                <BotanicalBranch className="absolute -top-6 -right-6 w-24 rotate-45 opacity-30" />
 
                 <div className="text-center mb-8">
                   <span className="text-xs font-semibold tracking-widest uppercase text-[#9792e3]">
@@ -919,14 +956,18 @@ export default function WeddingApp() {
 
                 <form onSubmit={handleRsvpSubmit} className="space-y-6 relative z-10">
                   {/* Attendance Choice */}
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-2">
+                  <div role="group" aria-labelledby="attendance-label">
+                    <label
+                      id="attendance-label"
+                      className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-2"
+                    >
                       Will you be attending? *
                     </label>
                     <div className="grid grid-cols-2 gap-4">
                       <button
                         type="button"
                         onClick={() => setRsvpData({ ...rsvpData, attending: "attending" })}
+                        aria-pressed={rsvpData.attending === "attending"}
                         className={`py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all flex items-center justify-center gap-2 ${
                           rsvpData.attending === "attending"
                             ? "bg-[#61E786] border-[#61E786] text-[#48435c] shadow-sm"
@@ -939,6 +980,7 @@ export default function WeddingApp() {
                       <button
                         type="button"
                         onClick={() => setRsvpData({ ...rsvpData, attending: "declining" })}
+                        aria-pressed={rsvpData.attending === "declining"}
                         className={`py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all flex items-center justify-center gap-2 ${
                           rsvpData.attending === "declining"
                             ? "bg-[#48435c] border-[#48435c] text-white shadow-sm"
@@ -953,29 +995,37 @@ export default function WeddingApp() {
                   {/* Guest Name & Email */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                      <label
+                        htmlFor="rsvp-name"
+                        className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                      >
                         Full Name *
                       </label>
                       <input
                         type="text"
+                        id="rsvp-name"
                         required
                         value={rsvpData.fullName}
                         onChange={(e) => setRsvpData({ ...rsvpData, fullName: e.target.value })}
-                        placeholder="Enjelaine Cabilatazan"
-                        className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                        placeholder="Your full name"
+                        className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                      <label
+                        htmlFor="rsvp-email"
+                        className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                      >
                         Email Address *
                       </label>
                       <input
                         type="email"
+                        id="rsvp-email"
                         required
                         value={rsvpData.email}
                         onChange={(e) => setRsvpData({ ...rsvpData, email: e.target.value })}
-                        placeholder="enjelaine@example.com"
-                        className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                        placeholder="you@example.com"
+                        className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
                       />
                     </div>
                   </div>
@@ -985,13 +1035,17 @@ export default function WeddingApp() {
                       {/* Guest Count & Meal Selection */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                          <label
+                            htmlFor="rsvp-guest-count"
+                            className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                          >
                             Total Attending Guests
                           </label>
                           <select
+                            id="rsvp-guest-count"
                             value={rsvpData.guestCount}
                             onChange={(e) => setRsvpData({ ...rsvpData, guestCount: e.target.value })}
-                            className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                            className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
                           >
                             <option value="1">1 Person (Just Me)</option>
                             <option value="2">2 Persons (+ Plus One)</option>
@@ -1000,58 +1054,67 @@ export default function WeddingApp() {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                          <label
+                            htmlFor="rsvp-meal"
+                            className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                          >
                             Entrée Preference
                           </label>
                           <select
+                            id="rsvp-meal"
                             value={rsvpData.mealChoice}
                             onChange={(e) => setRsvpData({ ...rsvpData, mealChoice: e.target.value })}
-                            className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                            className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
                           >
-                            <option value="Salmon with Summer Dill Velouté">
-                              Wild Salmon with Summer Dill Velouté
-                            </option>
-                            <option value="Prime Tenderloin with Morel Sauce">
-                              Prime Tenderloin with Morel Demi-Glace
-                            </option>
-                            <option value="Summer Truffle & Morel Risotto (Vegan/GF)">
-                              Summer Truffle & Morel Risotto (Vegan / GF)
-                            </option>
+                            {WEDDING.mealOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
 
                       {/* Dietary restrictions */}
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                        <label
+                          htmlFor="rsvp-dietary"
+                          className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                        >
                           Dietary Allergies or Restrictions
                         </label>
                         <input
                           type="text"
+                          id="rsvp-dietary"
                           value={rsvpData.dietary}
                           onChange={(e) => setRsvpData({ ...rsvpData, dietary: e.target.value })}
                           placeholder="e.g., Gluten-free, nut allergy, vegetarian"
-                          className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                          className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
                         />
                       </div>
 
                       {/* Song request */}
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1">
+                        <label
+                          htmlFor="rsvp-song"
+                          className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
+                        >
                           Song That Will Get You on the Dance Floor
                         </label>
                         <input
                           type="text"
+                          id="rsvp-song"
                           value={rsvpData.songRequest}
                           onChange={(e) => setRsvpData({ ...rsvpData, songRequest: e.target.value })}
                           placeholder="e.g., Fleetwood Mac - You Make Loving Fun"
-                          className="w-full px-4 py-2.5 text-sm rounded-xl bg-white/80 border border-[#9792e3]/30 focus:outline-none focus:ring-2 focus:ring-[#9792e3] text-[#48435c]"
+                          className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
                         />
                       </div>
                     </>
                   )}
 
                   <button
+                    ref={rsvpSubmitRef}
                     type="submit"
                     className="w-full py-4 rounded-xl bg-[#61E786] text-[#48435c] font-bold text-sm tracking-widest uppercase hover:bg-[#52d475] shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                   >
@@ -1069,9 +1132,15 @@ export default function WeddingApp() {
           8. RSVP CONFIRMATION MODAL & DIGITAL EVENT PASS
       ========================================================================= */}
       {showPassModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#48435c]/50 backdrop-blur-sm animate-fade-in">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pass-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#48435c]/50 backdrop-blur-sm animate-fade-in"
+        >
           <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-[#9792e3]/40 shadow-2xl overflow-hidden">
             <button
+              ref={passCloseButtonRef}
               onClick={() => setShowPassModal(false)}
               className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 text-[#5A5766]"
               aria-label="Close modal"
@@ -1083,10 +1152,10 @@ export default function WeddingApp() {
               <div className="w-12 h-12 mx-auto rounded-full bg-[#EDFFEC] border border-[#61E786] flex items-center justify-center text-[#61E786] mb-3">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
-              <span className="text-xs uppercase tracking-widest font-bold text-[#9792e3]">
+              <span className="text-xs uppercase tracking-widest font-bold text-[#6f68b8]">
                 RSVP Received With Love
               </span>
-              <h3 className="text-3xl font-script text-[#48435c] mt-1">
+              <h3 id="pass-modal-title" className="text-3xl font-script text-[#48435c] mt-1">
                 Thank You, {rsvpData.fullName || "Guest"}!
               </h3>
               <p className="text-xs text-[#5A5766] mt-2 font-serif-elegant italic text-base">
@@ -1101,11 +1170,11 @@ export default function WeddingApp() {
               <div className="mt-6 rounded-2xl bg-[#EDFFEC]/90 border border-dashed border-[#9792e3] p-5 relative">
                 <div className="flex justify-between items-center border-b border-[#9792e3]/30 pb-3">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-[#9792e3]">
+                    <span className="text-[10px] uppercase font-bold text-[#6f68b8]">
                       Official Guest Pass
                     </span>
                     <h4 className="font-serif-elegant font-bold text-lg text-[#48435c]">
-                      Enjelaine & Erwin’s Wedding
+                      {WEDDING.partner1} &amp; {WEDDING.partner2}&rsquo;s Wedding
                     </h4>
                   </div>
                   <Sparkles className="w-5 h-5 text-[#61E786]" />
@@ -1113,27 +1182,27 @@ export default function WeddingApp() {
 
                 <div className="grid grid-cols-2 gap-3 pt-3 text-xs text-[#5A5766]">
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#9792e3]">Guest</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Guest</span>
                     <span className="font-semibold text-[#48435c]">{rsvpData.fullName}</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#9792e3]">Party Size</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Party Size</span>
                     <span className="font-semibold text-[#48435c]">{rsvpData.guestCount} Guest(s)</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#9792e3]">Date</span>
-                    <span className="font-semibold text-[#48435c]">July 17, 2027</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Date</span>
+                    <span className="font-semibold text-[#48435c]">{WEDDING.dateLabel}</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#9792e3]">Venue</span>
-                    <span className="font-semibold text-[#48435c]">Sonoma, CA</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Venue</span>
+                    <span className="font-semibold text-[#48435c]">{WEDDING.venue}</span>
                   </div>
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-[#9792e3]/30 flex justify-between items-center text-[10px] text-[#48435c]">
-                  <span>Entrée: {rsvpData.mealChoice.split("with")[0]}</span>
+                  <span>Entrée: {rsvpData.mealChoice}</span>
                   <span className="font-mono bg-white px-2 py-0.5 rounded border border-[#9792e3]/30 font-semibold">
-                    #PASS-{Math.floor(1000 + Math.random() * 9000)}
+                    #PASS-{passCode}
                   </span>
                 </div>
               </div>

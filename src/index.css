@@ -345,3 +345,25 @@ html {
     animation: none;
   }
 }
+
+/* --- Form fields (RSVP reply card & guestbook) --- */
+.field {
+  border: 1px solid #7d77cc;
+  background: rgba(255, 255, 255, 0.8);
+  color: #48435c;
+}
+
+.field::placeholder {
+  color: #6f6b7a;
+  opacity: 1;
+}
+
+.field:focus-visible {
+  outline: 2px solid #6f68b8;
+  outline-offset: 2px;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid #6f68b8;
+  outline-offset: 3px;
+}
