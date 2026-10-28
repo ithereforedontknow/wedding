@@ -1,0 +1,250 @@
+/* --- Booklet stage: one tall scroll area, one pinned stage --- */
+.book-scroll {
+  --book-scroll: 700svh;
+  height: var(--book-scroll);
+}
+
+.book-stage {
+  --page-w: min(44vw, 540px);
+  --page-h: min(84svh, 760px);
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100svh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* The book is two pages wide (spine in the middle). The timeline shifts it
+   left/right so the closed cover and closed back cover stay centered. */
+.book {
+  position: relative;
+  width: calc(var(--page-w) * 2);
+  height: var(--page-h);
+  perspective: 2200px;
+  will-change: transform;
+}
+
+/* A leaf is hinged at the spine and starts on the right half. */
+.book-leaf {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+}
+
+.book-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.book-face--back {
+  transform: rotateY(180deg);
+}
+
+/* Spine shade: right pages darken at their left edge, left pages at their right edge. */
+.book-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(to right, rgba(72, 67, 92, 0.14), transparent 9%);
+}
+
+.book-face--back::after {
+  background: linear-gradient(to left, rgba(72, 67, 92, 0.14), transparent 9%);
+}
+
+/* Paper look, matching the footer keepsake card */
+.book-page {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(151, 146, 227, 0.3);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.97),
+    rgba(248, 255, 250, 0.94) 55%,
+    rgba(255, 255, 255, 0.97)
+  );
+  box-shadow: 0 24px 70px -40px rgba(72, 67, 92, 0.35);
+}
+
+.book-page::before {
+  content: "";
+  position: absolute;
+  inset: 0.5rem;
+  border: 1px dashed rgba(151, 146, 227, 0.3);
+  border-radius: 1.1rem;
+  pointer-events: none;
+}
+
+/* The existing FrontCover fills its page instead of using the old fixed card size */
+.book-face > * {
+  width: 100%;
+  height: 100%;
+}
+
+.book-face .cover-card {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  transform: none;
+}
+
+/* --- Page-turn polish --- */
+.book-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(72, 67, 92, 0.55), rgba(72, 67, 92, 0) 70%);
+}
+
+.book-face--back .book-shade {
+  background: linear-gradient(to left, rgba(72, 67, 92, 0.55), rgba(72, 67, 92, 0) 70%);
+}
+
+/* Paper thickness: thin striped strips at the outer edge of each stack */
+.book-edge {
+  position: absolute;
+  top: 1.2%;
+  width: 10px;
+  height: 97.6%;
+  border-radius: 2px;
+  pointer-events: none;
+  background: repeating-linear-gradient(to right, #fbfaff 0 2px, #d6d1f3 2px 3px);
+  box-shadow: 0 2px 6px rgba(72, 67, 92, 0.2);
+}
+
+.book-edge--right {
+  left: 100%;
+  transform-origin: left center;
+}
+
+.book-edge--left {
+  right: 100%;
+  transform-origin: right center;
+}
+
+/* Soft ground shadow under the book */
+.book-ground {
+  position: absolute;
+  left: 0;
+  bottom: -1.75rem;
+  width: 100%;
+  height: 2rem;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgba(72, 67, 92, 0.3), transparent 70%);
+}
+
+/* --- Page dots --- */
+.book-dots {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  gap: 0.625rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(151, 146, 227, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(6px);
+  transform: translateX(-50%);
+}
+
+.book-dot {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: rgba(151, 146, 227, 0.4);
+  transition: transform 200ms ease, background-color 200ms ease;
+}
+
+/* Bigger tap target than the visible dot */
+.book-dot::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
+}
+
+.book-dot.is-active {
+  background: #48435c;
+  transform: scale(1.35);
+}
+
+/* --- Fallback: reduced motion or short screens, pages stacked vertically --- */
+.book-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem 3rem;
+}
+
+.book-fallback-item {
+  width: var(--card-width, min(92vw, 720px));
+}
+
+.book-fallback .book-page {
+  min-height: 12rem;
+}
+
+.book-fallback .book-page--flow {
+  display: block;
+  height: auto;
+}
+
+.book-fallback .book-page-scroll {
+  position: relative;
+  inset: auto;
+  overflow: visible;
+}
+
+/* --- Mobile: one page at a time, no spread --- */
+@media (max-width: 767px) {
+  .book-scroll {
+    --book-scroll: 900svh;
+  }
+
+  .book-stage {
+    --page-w: min(90vw, 420px);
+    --page-h: min(80svh, 680px);
+  }
+
+  .book {
+    width: var(--page-w);
+  }
+
+  .book-leaf {
+    left: 0;
+    width: 100%;
+  }
+
+  .book-edge {
+    display: none;
+  }
+
+  /* Big blurred shadows are expensive to paint on phones */
+  .book-page {
+    box-shadow: 0 10px 24px -18px rgba(72, 67, 92, 0.35);
+  }
+}

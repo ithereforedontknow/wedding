@@ -459,7 +459,11 @@ export default function WeddingApp() {
     setShowPassModal(true);
   };
 
-  // Focus management + Escape handling for the pass modal.
+  // Focus management for the pass modal: focus the close button when the
+  // modal opens, handle Escape while it is open, and return focus to the
+  // RSVP submit button only when an opened modal closes.
+  // The cleanup of the open state doubles as the focus-return handler, so
+  // nothing steals focus on initial mount.
   useEffect(() => {
     if (!showPassModal) return;
 
@@ -472,14 +476,10 @@ export default function WeddingApp() {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showPassModal]);
-
-  // Return focus to the RSVP submit button when the pass modal closes.
-  useEffect(() => {
-    if (showPassModal) return;
-
-    rsvpSubmitRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      rsvpSubmitRef.current?.focus();
+    };
   }, [showPassModal]);
 
   // Google Calendar Link Generator
@@ -879,7 +879,7 @@ export default function WeddingApp() {
                   {/* Note Wash Color Picker */}
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-xs text-[#5A5766] font-medium">Watercolor Wash:</span>
-                    <div className="flex gap-2">
+                    <div role="group" aria-label="Watercolor wash color" className="flex gap-2">
                       {[
                         { name: "Honeydew", hex: "#EDFFEC" },
                         { name: "Soft Lilac", hex: "#f3f0ff" },
