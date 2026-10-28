@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+/* --- Keepsake card geometry --- */
+:root {
+  --card-width: min(92vw, 720px);
+  --cover-height: min(86svh, 900px);
+  --pin-height: 100svh;
+}
+
+@media (max-width: 1024px) {
+  :root { --card-width: min(90vw, 680px); }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --card-width: calc(100vw - 32px);
+    --cover-height: min(82svh, 720px);
+  }
+}
+
+.cover-card {
+  width: var(--card-width);
+  height: var(--cover-height);
+  margin-inline: auto;
+}
+
 html {
     scroll-behavior: smooth;
 }

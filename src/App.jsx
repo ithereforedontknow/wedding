@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
   Calendar,
-  Clock,
   MapPin,
   Car,
   Hotel,
@@ -20,9 +19,12 @@ import {
   UtensilsCrossed,
   X,
   Volume2,
-  VolumeX,
-  ChevronDown
+  VolumeX
 } from "lucide-react";
+import { BotanicalBranch } from "./components/BotanicalBranch";
+import FrontCover from "./components/FrontCover";
+import { WEDDING } from "./config";
+import { getWeddingTimestamp } from "./lib/wedding";
 
 // --- Google Fonts Injection & Custom Styles ---
 const StyleInjector = () => (
@@ -73,32 +75,7 @@ const StyleInjector = () => (
   `}</style>
 );
 
-// --- Watercolor Floral SVG Motifs ---
-const BotanicalBranch = ({ className = "" }) => (
-  <svg
-    viewBox="0 0 200 120"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={`pointer-events-none ${className}`}
-  >
-    <path
-      d="M10,110 Q80,70 180,20"
-      stroke="#9792e3"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      opacity="0.45"
-    />
-    {/* Leaves */}
-    <path d="M40,90 Q45,70 65,75 Q55,95 40,90 Z" fill="#61E786" opacity="0.45" />
-    <path d="M85,68 Q100,50 115,62 Q95,80 85,68 Z" fill="#9792e3" opacity="0.4" />
-    <path d="M125,48 Q145,30 155,48 Q135,62 125,48 Z" fill="#61E786" opacity="0.45" />
-    <path d="M165,28 Q185,10 190,26 Q175,38 165,28 Z" fill="#9792e3" opacity="0.5" />
-    {/* Delicate Watercolor Blossoms */}
-    <circle cx="65" cy="72" r="5" fill="#9792e3" opacity="0.6" />
-    <circle cx="115" cy="58" r="6" fill="#EDFFEC" stroke="#9792e3" strokeWidth="1" opacity="0.85" />
-    <circle cx="155" cy="42" r="5" fill="#61E786" opacity="0.6" />
-  </svg>
-);
+// --- Watercolor Floral SVG Motifs --- (moved to src/components/BotanicalBranch.jsx)
 
 // --- Floating Petal Canvas Component ---
 const WatercolorPetalsCanvas = ({ active = true }) => {
@@ -270,7 +247,7 @@ const WatercolorPetalsCanvas = ({ active = true }) => {
 };
 
 // --- Countdown Badge Component ---
-const WEDDING_DATE = new Date("2027-04-10T14:00:00").getTime();
+const WEDDING_TIMESTAMP = getWeddingTimestamp(WEDDING.date);
 
 const CountdownBadge = ({ targetDate }) => {
   const [timeLeft, setTimeLeft] = useState({
@@ -679,71 +656,38 @@ END:VCALENDAR`;
       )}
 
       {/* =========================================================================
-          2. TOP HERO SECTION & COUNTDOWN
+          2. FRONT COVER (STATIC PORTRAIT KEEPSAKE CARD)
       ========================================================================= */}
-      <header className="relative pt-20 pb-16 md:pt-28 md:pb-24 overflow-hidden text-center px-4">
-        {/* Soft Background Botanical Corners */}
-        <BotanicalBranch className="absolute top-0 left-0 w-44 md:w-72 opacity-60" />
-        <BotanicalBranch className="absolute top-0 right-0 w-44 md:w-72 scale-x-[-1] opacity-60" />
+      <section className="flex justify-center py-10">
+        <FrontCover wedding={WEDDING} />
+      </section>
 
-        <div className="max-w-4xl mx-auto relative z-20">
-
-          <h1 className="text-6xl sm:text-7xl md:text-9xl font-script text-[#48435c] drop-shadow-sm leading-tight">
-            Enjelaine <span className="text-[#9792e3] font-serif-elegant font-light">&</span> Erwin
-          </h1>
-
-          <p className="mt-4 text-lg md:text-2xl font-serif-elegant italic text-[#5A5766] max-w-xl mx-auto">
-            Together with their families, request the pleasure of your company at their marriage celebration.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-6 text-sm text-[#48435c] font-medium">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-[#9792e3]" />
-              Saturday, April 10, 2027
-            </span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#61E786]"></span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-[#9792e3]" />
-              2:00 PM PST
-            </span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#61E786]"></span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-[#9792e3]" />
-              Casa De Hufana
-            </span>
-          </div>
-
-          {/* Quick CTA anchor links */}
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <a
-              href="#rsvp-section"
-              className="px-8 py-3 rounded-full bg-[#61E786] text-[#48435c] font-semibold text-sm hover:bg-[#52d475] shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
-            >
-              <Heart className="w-4 h-4 fill-current text-[#48435c]" />
-              RSVP Now
-            </a>
-            <a
-              href="#timeline-section"
-              className="px-8 py-3 rounded-full watercolor-card text-[#48435c] font-semibold text-sm hover:bg-white shadow-sm hover:shadow transition-all"
-            >
-              View Day Schedule
-            </a>
-          </div>
-
-          {/* Watercolor Circle Countdown Badge */}
-          <CountdownBadge targetDate={WEDDING_DATE} />
-        </div>
-
-        <div className="mt-10 flex justify-center">
+      {/* =========================================================================
+          2b. TEMPORARY OPENING BAND (COUNTDOWN + CTAs)
+      ========================================================================= */}
+      <section id="inside-card" className="mx-auto max-w-xl px-4 py-16 text-center">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#6f68b8]">The Celebration</p>
+        <h2 className="mt-1 font-script text-4xl text-[#48435c] md:text-5xl">Enjelaine &amp; Erwin</h2>
+        <p className="mt-2 text-sm font-medium text-[#5A5766]">
+          Saturday, April 10, 2027 · Casa De Hufana · Agoo, La Union
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <a
-            href="#story-section"
-            className="animate-bounce p-2 rounded-full text-[#9792e3] hover:text-[#48435c] transition-colors"
-            aria-label="Scroll down"
+            href="#rsvp-section"
+            className="px-8 py-3 rounded-full bg-[#61E786] text-[#48435c] font-semibold text-sm hover:bg-[#52d475] shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
           >
-            <ChevronDown className="w-6 h-6" />
+            <Heart className="w-4 h-4 fill-current text-[#48435c]" />
+            RSVP Now
+          </a>
+          <a
+            href="#timeline-section"
+            className="px-8 py-3 rounded-full watercolor-card text-[#48435c] font-semibold text-sm hover:bg-white shadow-sm hover:shadow transition-all"
+          >
+            View Day Schedule
           </a>
         </div>
-      </header>
+        <CountdownBadge targetDate={WEDDING_TIMESTAMP} />
+      </section>
 
       {/* =========================================================================
           3. OUR STORY & LOVE NOTES
