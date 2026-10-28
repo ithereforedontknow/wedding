@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Heart,
   Calendar,
@@ -25,6 +25,7 @@ import { BotanicalBranch } from "./components/BotanicalBranch";
 import FrontCover from "./components/FrontCover";
 import { WEDDING } from "./config";
 import { getWeddingTimestamp } from "./lib/wedding";
+import { useScrollProgress } from "./hooks/useScrollProgress";
 
 // --- Google Fonts Injection & Custom Styles ---
 const StyleInjector = () => (
@@ -319,6 +320,25 @@ export default function WeddingApp() {
   // Audio atmosphere simulation toggle
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
 
+  // Scroll-scrubbed cover lift refs
+  const coverSpacerRef = useRef(null);
+  const coverPinRef = useRef(null);
+  const coverShadowRef = useRef(null);
+  const coverRef = useRef(null);
+  const insideRef = useRef(null);
+
+  // Keep the lifted cover inert so it never blocks the inside content.
+  const handleCoverProgress = useCallback((progress) => {
+    if (coverRef.current) coverRef.current.inert = progress > 0.98;
+  }, []);
+
+  useScrollProgress(coverSpacerRef, {
+    targetRef: coverShadowRef,
+    pinRef: coverPinRef,
+    variable: "--cover-progress",
+    onProgress: handleCoverProgress,
+  });
+
   // Track reduced-motion preference for a shorter opening sequence
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -476,7 +496,7 @@ END:VCALENDAR`;
   };
 
   return (
-    <div className="min-h-screen watercolor-canvas font-body text-[#5A5766] selection:bg-[#9792e3] selection:text-white relative isolate overflow-x-hidden">
+    <div className="min-h-screen watercolor-canvas font-body text-[#5A5766] selection:bg-[#9792e3] selection:text-white relative isolate overflow-x-clip">
       <StyleInjector />
       <WatercolorPetalsCanvas active={isRevealing || isOpened} />
 
@@ -656,38 +676,45 @@ END:VCALENDAR`;
       )}
 
       {/* =========================================================================
-          2. FRONT COVER (STATIC PORTRAIT KEEPSAKE CARD)
+          2. FRONT COVER (SCROLL-SCRUBBED PORTRAIT KEEPSAKE CARD)
       ========================================================================= */}
-      <section className="flex justify-center py-10">
-        <FrontCover wedding={WEDDING} />
+      <section ref={coverSpacerRef} className="cover-spacer relative z-20">
+        <div ref={coverPinRef} className="cover-pin">
+          <div ref={coverShadowRef} className="cover-shadow">
+            <FrontCover ref={coverRef} wedding={WEDDING} />
+          </div>
+        </div>
       </section>
 
       {/* =========================================================================
-          2b. TEMPORARY OPENING BAND (COUNTDOWN + CTAs)
+          2b. INSIDE CARD SURFACE (OPENING BAND + SECTIONS)
       ========================================================================= */}
-      <section id="inside-card" className="mx-auto max-w-xl px-4 py-16 text-center">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#6f68b8]">The Celebration</p>
-        <h2 className="mt-1 font-script text-4xl text-[#48435c] md:text-5xl">Enjelaine &amp; Erwin</h2>
-        <p className="mt-2 text-sm font-medium text-[#5A5766]">
-          Saturday, April 10, 2027 · Casa De Hufana · Agoo, La Union
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <a
-            href="#rsvp-section"
-            className="px-8 py-3 rounded-full bg-[#61E786] text-[#48435c] font-semibold text-sm hover:bg-[#52d475] shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
-          >
-            <Heart className="w-4 h-4 fill-current text-[#48435c]" />
-            RSVP Now
-          </a>
-          <a
-            href="#timeline-section"
-            className="px-8 py-3 rounded-full watercolor-card text-[#48435c] font-semibold text-sm hover:bg-white shadow-sm hover:shadow transition-all"
-          >
-            View Day Schedule
-          </a>
-        </div>
-        <CountdownBadge targetDate={WEDDING_TIMESTAMP} />
-      </section>
+      <main id="inside-card" ref={insideRef} className="inside-card relative z-10 mx-auto">
+        <div className="inside-paper">
+          {/* Temporary opening band (countdown + CTAs); Task 4 restructures the inside */}
+          <section className="mx-auto max-w-xl px-4 py-16 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#6f68b8]">The Celebration</p>
+            <h2 className="mt-1 font-script text-4xl text-[#48435c] md:text-5xl">Enjelaine &amp; Erwin</h2>
+            <p className="mt-2 text-sm font-medium text-[#5A5766]">
+              Saturday, April 10, 2027 · Casa De Hufana · Agoo, La Union
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <a
+                href="#rsvp-section"
+                className="px-8 py-3 rounded-full bg-[#61E786] text-[#48435c] font-semibold text-sm hover:bg-[#52d475] shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
+              >
+                <Heart className="w-4 h-4 fill-current text-[#48435c]" />
+                RSVP Now
+              </a>
+              <a
+                href="#timeline-section"
+                className="px-8 py-3 rounded-full watercolor-card text-[#48435c] font-semibold text-sm hover:bg-white shadow-sm hover:shadow transition-all"
+              >
+                View Day Schedule
+              </a>
+            </div>
+            <CountdownBadge targetDate={WEDDING_TIMESTAMP} />
+          </section>
 
       {/* =========================================================================
           3. OUR STORY & LOVE NOTES
@@ -1325,6 +1352,8 @@ END:VCALENDAR`;
           </form>
         </div>
       </section>
+        </div>
+      </main>
 
       {/* =========================================================================
           8. RSVP CONFIRMATION MODAL & DIGITAL EVENT PASS
