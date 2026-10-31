@@ -1,34 +1,19 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Heart,
-  Calendar,
-  Send,
   Sparkles,
   Download,
   CheckCircle2,
-  UtensilsCrossed,
-  Wine,
-  Music,
   X,
   Volume2,
   VolumeX
 } from "lucide-react";
-import { BotanicalBranch } from "./components/BotanicalBranch";
-import FrontCover from "./components/FrontCover";
-import { SectionHeading } from "./components/SectionHeading";
-import { Reveal } from "./components/Reveal";
+import Book from "./components/Book";
+import { buildLeaves } from "./components/BookPages";
+import { RsvpFormModal, WishModal } from "./components/BookModals";
 import { WEDDING } from "./config";
 import { getWeddingTimestamp, buildGoogleCalendarUrl, buildIcsContent, createPassCode } from "./lib/wedding";
-import { useScrollProgress } from "./hooks/useScrollProgress";
 
-// Timeline icon map for the schedule entries (keys match WEDDING.schedule icons)
-const SCHEDULE_ICONS = {
-  sparkles: Sparkles,
-  heart: Heart,
-  wine: Wine,
-  utensils: UtensilsCrossed,
-  music: Music,
-};
 
 // --- Google Fonts Injection & Custom Styles ---
 const StyleInjector = () => (
@@ -47,19 +32,19 @@ const StyleInjector = () => (
 
     /* Soft watercolor paper backdrop pattern */
     .watercolor-canvas {
-      background-color: #EDFFEC;
+      background-color: #F4F1DE;
       background-image:
-        radial-gradient(circle at 15% 20%, rgba(151, 146, 227, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 85% 30%, rgba(97, 231, 134, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 50% 80%, rgba(151, 146, 227, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 90%, rgba(97, 231, 134, 0.15) 0%, transparent 40%);
+        radial-gradient(circle at 15% 20%, rgba(224, 122, 95, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 30%, rgba(242, 201, 76, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 80%, rgba(224, 122, 95, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 90%, rgba(242, 201, 76, 0.15) 0%, transparent 40%);
     }
 
     .watercolor-card {
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(151, 146, 227, 0.25);
-      box-shadow: 0 10px 30px -10px rgba(72, 67, 92, 0.08);
+      border: 1px solid rgba(224, 122, 95, 0.25);
+      box-shadow: 0 10px 30px -10px rgba(47, 79, 62, 0.08);
     }
 
     .brushstroke-border {
@@ -69,8 +54,8 @@ const StyleInjector = () => (
 
     /* Wax seal pulse */
     @keyframes pulse-subtle {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 6px rgba(72, 67, 92, 0.2)); }
-      50% { transform: scale(1.04); filter: drop-shadow(0 8px 12px rgba(151, 146, 227, 0.35)); }
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 6px rgba(47, 79, 62, 0.2)); }
+      50% { transform: scale(1.04); filter: drop-shadow(0 8px 12px rgba(224, 122, 95, 0.35)); }
     }
     .seal-pulse {
       animation: pulse-subtle 3s infinite ease-in-out;
@@ -100,10 +85,10 @@ const WatercolorPetalsCanvas = ({ active = true }) => {
 
     // Soft watercolor palette (periwinkle, green, lilac, mint)
     const palette = [
-      [151, 146, 227],
-      [97, 231, 134],
-      [200, 195, 255],
-      [180, 245, 205]
+      [224, 122, 95],
+      [242, 201, 76],
+      [47, 79, 62],
+      [236, 168, 146]
     ];
 
     const petalCount = 28;
@@ -281,8 +266,8 @@ const CountdownBadge = ({ targetDate }) => {
   }, [targetDate]);
 
   return (
-    <div className="mt-8 max-w-md mx-auto rounded-2xl border border-[#7d77cc]/25 bg-white/50 p-4 sm:p-5">
-      <h3 className="text-[10px] uppercase tracking-widest text-[#6f68b8] font-semibold mb-4">
+    <div className="mt-8 max-w-md mx-auto rounded-2xl border border-[#E07A5F]/25 bg-white/50 p-4 sm:p-5">
+      <h3 className="text-[10px] uppercase tracking-widest text-[#2F4F3E]/75 font-semibold mb-4">
         Counting Down to Forever
       </h3>
       <div className="grid grid-cols-4 gap-3 text-center">
@@ -294,12 +279,12 @@ const CountdownBadge = ({ targetDate }) => {
         ].map((item, idx) => (
           <div
             key={idx}
-            className="flex flex-col items-center justify-center rounded-xl border border-[#9792e3]/20 bg-white/60 p-2 sm:p-3"
+            className="flex flex-col items-center justify-center rounded-xl border border-[#E07A5F]/20 bg-white/60 p-2 sm:p-3"
           >
-            <span className="text-xl sm:text-2xl font-serif-elegant font-bold text-[#48435c]">
+            <span className="text-xl sm:text-2xl font-serif-elegant font-bold text-[#2F4F3E]">
               {String(item.val).padStart(2, "0")}
             </span>
-            <span className="text-[9px] tracking-wider uppercase font-semibold text-[#6f68b8] mt-1">
+            <span className="text-[9px] tracking-wider uppercase font-semibold text-[#2F4F3E]/75 mt-1">
               {item.label}
             </span>
           </div>
@@ -328,24 +313,13 @@ export default function WeddingApp() {
   const rsvpSubmitRef = useRef(null);
   const passCloseButtonRef = useRef(null);
 
-  // Scroll-scrubbed cover lift refs
-  const coverSpacerRef = useRef(null);
-  const coverPinRef = useRef(null);
-  const coverShadowRef = useRef(null);
-  const coverRef = useRef(null);
-  const insideRef = useRef(null);
+  // Book control: bookControl.current?.goToPage("rsvp") jumps the book to a page
+  // (cover, story, letter, schedule, countdown, gallery, gifts, guestbook, rsvp, end).
+  const bookControl = useRef(null);
 
-  // Keep the lifted cover inert so it never blocks the inside content.
-  const handleCoverProgress = useCallback((progress) => {
-    if (coverRef.current) coverRef.current.inert = progress > 0.98;
-  }, []);
-
-  useScrollProgress(coverSpacerRef, {
-    targetRef: coverShadowRef,
-    pinRef: coverPinRef,
-    variable: "--cover-progress",
-    onProgress: handleCoverProgress,
-  });
+  // The RSVP form and the guestbook form open as modals over the book.
+  const [showRsvpForm, setShowRsvpForm] = useState(false);
+  const [showWishForm, setShowWishForm] = useState(false);
 
   // Track reduced-motion preference for a shorter opening sequence
   useEffect(() => {
@@ -402,26 +376,26 @@ export default function WeddingApp() {
       author: "Clara & James",
       message: "May your summer love forever bloom with joy, laughter, and endless adventure!",
       date: "Just now",
-      color: "#EDFFEC"
+      color: "#F4F1DE"
     },
     {
       id: 2,
       author: "The Montgomery Family",
       message: "Counting down the days to celebrate the happiest chapter of your lives in Agoo!",
       date: "2 hours ago",
-      color: "#f6f3ff"
+      color: "#FBE9E2"
     },
     {
       id: 3,
       author: "Sofia Lin",
       message: "To pure love, barefoot dancing under the stars, and a lifetime of summer sunsets. 💕",
       date: "Yesterday",
-      color: "#eefbee"
+      color: "#FAF6E4"
     }
   ]);
   const [newAuthor, setNewAuthor] = useState("");
   const [newMessage, setNewMessage] = useState("");
-  const [selectedNoteWash, setSelectedNoteWash] = useState("#EDFFEC");
+  const [selectedNoteWash, setSelectedNoteWash] = useState("#F4F1DE");
 
   const handlePostWish = (e) => {
     e.preventDefault();
@@ -438,6 +412,7 @@ export default function WeddingApp() {
     ]);
     setNewAuthor("");
     setNewMessage("");
+    setShowWishForm(false);
   };
 
   // RSVP Form States
@@ -456,6 +431,7 @@ export default function WeddingApp() {
   const handleRsvpSubmit = (event) => {
     event.preventDefault();
     setPassCode(createPassCode());
+    setShowRsvpForm(false);
     setShowPassModal(true);
   };
 
@@ -468,6 +444,8 @@ export default function WeddingApp() {
     if (!showPassModal) return;
 
     passCloseButtonRef.current?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
@@ -478,6 +456,7 @@ export default function WeddingApp() {
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
       rsvpSubmitRef.current?.focus();
     };
   }, [showPassModal]);
@@ -502,7 +481,7 @@ export default function WeddingApp() {
   };
 
   return (
-    <div className="min-h-screen watercolor-canvas font-body text-[#5A5766] selection:bg-[#9792e3] selection:text-white relative isolate overflow-x-clip">
+    <div className="min-h-screen watercolor-canvas font-body text-[#2F4F3E]/85 selection:bg-[#E07A5F] selection:text-white relative isolate overflow-x-clip">
       <StyleInjector />
       <WatercolorPetalsCanvas active={isRevealing || isOpened} />
 
@@ -512,16 +491,16 @@ export default function WeddingApp() {
           onClick={() => setIsPlayingMusic(!isPlayingMusic)}
           aria-label="Toggle background ambience"
           aria-pressed={isPlayingMusic}
-          className="flex items-center gap-2 px-3 py-2 rounded-full watercolor-card border border-[#9792e3]/40 text-[#48435c] hover:bg-white transition-all shadow-sm text-xs font-medium"
+          className="flex items-center gap-2 px-3 py-2 rounded-full watercolor-card border border-[#E07A5F]/40 text-[#2F4F3E] hover:bg-white transition-all shadow-sm text-xs font-medium"
         >
           {isPlayingMusic ? (
             <>
-              <Volume2 className="w-4 h-4 text-[#61E786]" />
+              <Volume2 className="w-4 h-4 text-[#E07A5F]" />
               <span className="hidden sm:inline">Acoustic Strings</span>
             </>
           ) : (
             <>
-              <VolumeX className="w-4 h-4 text-[#5A5766]" />
+              <VolumeX className="w-4 h-4 text-[#2F4F3E]/85" />
               <span className="hidden sm:inline">Play Ambience</span>
             </>
           )}
@@ -533,7 +512,7 @@ export default function WeddingApp() {
       ========================================================================= */}
       {!isOpened && (
         <section
-          className={`envelope-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#EDFFEC]/95 ${
+          className={`envelope-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F4F1DE]/95 ${
             isRevealing ? "is-revealing" : ""
           }`}
           role="dialog"
@@ -551,16 +530,16 @@ export default function WeddingApp() {
                 envelopeOpening ? "is-leaving" : ""
               }`}
             >
-              <span className="text-[#6f68b8] uppercase tracking-widest text-xs font-semibold">
+              <span className="text-[#2F4F3E]/75 uppercase tracking-widest text-xs font-semibold">
                 You Are Cordially Invited
               </span>
               <h2
                 id="invitation-title"
-                className="text-4xl md:text-5xl font-script text-[#48435c] mt-1"
+                className="text-4xl md:text-5xl font-script text-[#2F4F3E] mt-1"
               >
                 {WEDDING.partner1} &amp; {WEDDING.partner2}
               </h2>
-              <p className="text-xs font-light text-[#5A5766] mt-1 font-serif-elegant italic">
+              <p className="text-xs font-light text-[#2F4F3E]/85 mt-1 font-serif-elegant italic">
                 {WEDDING.dateLabel} • {WEDDING.address}
               </p>
             </div>
@@ -568,7 +547,7 @@ export default function WeddingApp() {
             {/* Envelope */}
             <div className="envelope-stage relative mx-auto w-full max-w-md aspect-[5/4]">
               {/* Envelope back panel */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#f8fffa] via-[#f2fbf4] to-[#EDFFEC] border border-[#9792e3]/30 shadow-2xl" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#FBF9EE] via-[#F4F1DE] to-[#F4F1DE] border border-[#E07A5F]/30 shadow-2xl" />
 
               {/* Envelope top flap */}
               <div
@@ -581,8 +560,8 @@ export default function WeddingApp() {
                   style={{
                     clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                     background:
-                      "linear-gradient(165deg, #fbfffc 0%, #f2fbf4 55%, #e6f9eb 100%)",
-                    filter: "drop-shadow(0 5px 7px rgba(72, 67, 92, 0.13))"
+                      "linear-gradient(165deg, #FDFBF3 0%, #F4F1DE 55%, #EFEBD2 100%)",
+                    filter: "drop-shadow(0 5px 7px rgba(47, 79, 62, 0.13))"
                   }}
                 />
                 <div
@@ -590,7 +569,7 @@ export default function WeddingApp() {
                   style={{
                     clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                     background:
-                      "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(151,146,227,0.06) 55%, rgba(97,231,134,0.14) 100%)"
+                      "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(224,122,95,0.06) 55%, rgba(242,201,76,0.14) 100%)"
                   }}
                 />
                 <div
@@ -598,38 +577,38 @@ export default function WeddingApp() {
                   style={{
                     clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                     background:
-                      "radial-gradient(circle at 28% 18%, rgba(151, 146, 227, 0.2) 0%, transparent 55%), linear-gradient(165deg, #f4f0ff 0%, #eaf8ef 55%, #dcefe3 100%)",
-                    filter: "drop-shadow(0 5px 7px rgba(72, 67, 92, 0.13))"
+                      "radial-gradient(circle at 28% 18%, rgba(224, 122, 95, 0.2) 0%, transparent 55%), linear-gradient(165deg, #FBE9E2 0%, #EFEBD2 55%, #E3DEBD 100%)",
+                    filter: "drop-shadow(0 5px 7px rgba(47, 79, 62, 0.13))"
                   }}
                 />
               </div>
 
               {/* Invitation letter tucked inside */}
               <div
-                className={`envelope-letter absolute inset-x-5 top-5 bottom-7 rounded-xl border border-[#9792e3]/25 bg-[#fffdf8] shadow-lg overflow-hidden ${
+                className={`envelope-letter absolute inset-x-5 top-5 bottom-7 rounded-xl border border-[#E07A5F]/25 bg-[#fffdf8] shadow-lg overflow-hidden ${
                   envelopeOpening ? "is-out" : ""
                 }`}
               >
-                <div className="h-full m-1.5 sm:m-2 p-4 sm:p-6 rounded-lg border border-dashed border-[#9792e3]/35 text-center flex flex-col items-center justify-center">
-                  <span className="font-serif-elegant italic text-[10px] sm:text-sm text-[#9792e3] block mb-1.5 sm:mb-2">
+                <div className="h-full m-1.5 sm:m-2 p-4 sm:p-6 rounded-lg border border-dashed border-[#E07A5F]/35 text-center flex flex-col items-center justify-center">
+                  <span className="font-serif-elegant italic text-[10px] sm:text-sm text-[#2F4F3E]/70 block mb-1.5 sm:mb-2">
                     A Midsummer Celebration of Love
                   </span>
-                  <p className="text-lg sm:text-2xl font-serif-elegant font-normal text-[#48435c] leading-snug">
+                  <p className="text-lg sm:text-2xl font-serif-elegant font-normal text-[#2F4F3E] leading-snug">
                     Will you join us in the garden under the stars?
                   </p>
-                  <div className="mt-3 sm:mt-5 flex items-center gap-2 text-[#61E786]">
-                    <span className="h-px w-6 sm:w-8 bg-[#9792e3]/40" />
+                  <div className="mt-3 sm:mt-5 flex items-center gap-2 text-[#E07A5F]">
+                    <span className="h-px w-6 sm:w-8 bg-[#E07A5F]/40" />
                     <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
-                    <span className="h-px w-6 sm:w-8 bg-[#9792e3]/40" />
+                    <span className="h-px w-6 sm:w-8 bg-[#E07A5F]/40" />
                   </div>
-                  <span className="mt-1 sm:mt-2 font-script text-2xl sm:text-3xl text-[#48435c]">E & E</span>
+                  <span className="mt-1 sm:mt-2 font-script text-2xl sm:text-3xl text-[#2F4F3E]">E & E</span>
                 </div>
               </div>
 
               {/* Envelope front pocket */}
               <div className="absolute inset-x-0 bottom-0 top-[42%] overflow-hidden rounded-b-2xl">
                 <div
-                  className="absolute inset-0 bg-gradient-to-b from-[#eefcf2] to-[#e0f6e7]"
+                  className="absolute inset-0 bg-gradient-to-b from-[#F1EEDA] to-[#E8E3C6]"
                   style={{
                     clipPath: "polygon(0 14%, 50% 0, 100% 14%, 100% 100%, 0 100%)"
                   }}
@@ -639,7 +618,7 @@ export default function WeddingApp() {
                   style={{
                     clipPath: "polygon(0 14%, 50% 0, 100% 14%, 100% 100%, 0 100%)",
                     backgroundImage:
-                      "linear-gradient(135deg, transparent 49.4%, rgba(151,146,227,0.22) 50%, transparent 50.6%), linear-gradient(225deg, transparent 49.4%, rgba(151,146,227,0.22) 50%, transparent 50.6%)"
+                      "linear-gradient(135deg, transparent 49.4%, rgba(224,122,95,0.22) 50%, transparent 50.6%), linear-gradient(225deg, transparent 49.4%, rgba(224,122,95,0.22) 50%, transparent 50.6%)"
                   }}
                 />
               </div>
@@ -656,12 +635,12 @@ export default function WeddingApp() {
                   aria-label="Break seal and open invitation"
                 >
                   <div
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#48435c] via-[#5c5675] to-[#9792e3] p-1 cursor-pointer shadow-lg hover:shadow-2xl transition-all flex items-center justify-center ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#2F4F3E] via-[#3C6350] to-[#E07A5F] p-1 cursor-pointer shadow-lg hover:shadow-2xl transition-all flex items-center justify-center ${
                       isSealed ? "seal-pulse" : ""
                     }`}
                   >
-                    <div className="w-full h-full rounded-full border border-dashed border-[#EDFFEC]/50 flex flex-col items-center justify-center text-[#EDFFEC]">
-                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-[#61E786] text-[#61E786] mb-0.5 group-hover:scale-125 transition-transform" />
+                    <div className="w-full h-full rounded-full border border-dashed border-[#F4F1DE]/50 flex flex-col items-center justify-center text-[#F4F1DE]">
+                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-[#E07A5F] text-[#E07A5F] mb-0.5 group-hover:scale-125 transition-transform" />
                       <span className="font-serif-elegant text-[10px] sm:text-xs tracking-wider uppercase font-semibold">
                         E & E
                       </span>
@@ -669,12 +648,12 @@ export default function WeddingApp() {
                   </div>
                 </button>
                 <span
-                  className={`mt-2 text-[10px] sm:text-xs tracking-widest uppercase font-semibold text-[#48435c] flex items-center gap-1.5 transition-opacity duration-300 ${
+                  className={`mt-2 text-[10px] sm:text-xs tracking-widest uppercase font-semibold text-[#2F4F3E] flex items-center gap-1.5 transition-opacity duration-300 ${
                     isSealed ? "opacity-100" : "opacity-0"
                   }`}
                 >
                   <span>Click to Unseal</span>
-                  <Sparkles className="w-3.5 h-3.5 text-[#61E786]" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#E07A5F]" />
                 </span>
               </div>
             </div>
@@ -683,450 +662,43 @@ export default function WeddingApp() {
       )}
 
       {/* =========================================================================
-          2. FRONT COVER (SCROLL-SCRUBBED PORTRAIT KEEPSAKE CARD)
+          2. THE BOOK (FRONT COVER -> SPREADS -> BACK COVER, DRIVEN BY SCROLL)
       ========================================================================= */}
-      <section ref={coverSpacerRef} className="cover-spacer relative z-20">
-        <div ref={coverPinRef} className="cover-pin">
-          <div ref={coverShadowRef} className="cover-shadow">
-            <FrontCover ref={coverRef} wedding={WEDDING} />
-          </div>
-        </div>
-      </section>
+      <Book
+        wedding={WEDDING}
+        controlRef={bookControl}
+        leaves={buildLeaves({
+          wedding: WEDDING,
+          countdown: <CountdownBadge targetDate={WEDDING_TIMESTAMP} />,
+          wishes,
+          googleCalendarUrl: generateGoogleCalendarUrl(),
+          onDownloadICS: handleDownloadICS,
+          onOpenRsvp: () => setShowRsvpForm(true),
+          onOpenWish: () => setShowWishForm(true),
+          onOpenRegistry: () => alert("Honeymoon registry link opened! Thank you for your generosity."),
+          rsvpButtonRef: rsvpSubmitRef,
+        })}
+      />
 
-      {/* =========================================================================
-          2b. INSIDE CARD SURFACE (OPENING BAND + SECTIONS)
-      ========================================================================= */}
-      <main id="inside-card" ref={insideRef} className="inside-card relative z-10 mx-auto">
-        <div className="inside-paper">
-          <div className="space-y-20">
-            {/* Opening band */}
-            <Reveal className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#6f68b8]">
-                The Celebration
-              </p>
-              <h2 className="mt-1 font-script text-4xl text-[#48435c] md:text-5xl">
-                {WEDDING.partner1} &amp; {WEDDING.partner2}
-              </h2>
-              <p className="mt-2 text-sm font-medium text-[#5A5766]">
-                {WEDDING.dateLabel} · {WEDDING.venue} · {WEDDING.address}
-              </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <a
-                  href="#rsvp-section"
-                  className="px-8 py-3 rounded-full bg-[#61E786] text-[#48435c] font-semibold text-sm hover:bg-[#52d475] shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
-                >
-                  <Heart className="w-4 h-4 fill-current text-[#48435c]" />
-                  RSVP Now
-                </a>
-                <a
-                  href="#timeline-section"
-                  className="px-8 py-3 rounded-full watercolor-card text-[#48435c] font-semibold text-sm hover:bg-white shadow-sm hover:shadow transition-all"
-                >
-                  View Day Schedule
-                </a>
-              </div>
-              <CountdownBadge targetDate={WEDDING_TIMESTAMP} />
-            </Reveal>
-
-            {/* 3. OUR STORY & LOVE NOTES */}
-            <Reveal as="section" id="story-section">
-              <div className="watercolor-card rounded-3xl p-8 sm:p-12 relative overflow-hidden">
-                <BotanicalBranch className="absolute -bottom-8 -left-6 w-36 opacity-30" />
-
-                <SectionHeading eyebrow="Chapter One" title="Our Summer Story" />
-                <p className="mx-auto mt-6 max-w-2xl text-center font-serif-elegant text-lg italic leading-relaxed text-[#5A5766] sm:text-xl">
-                  "We met under the dappled shade of a botanical garden in July, sharing a love for chilled lemonade, warm guitar songs, and wandering gravel trails. Seven summers later, Erwin knelt in that very orchard at golden hour. We couldn’t imagine stepping into this lifetime together without our closest family and friends."
-                </p>
-              </div>
-            </Reveal>
-
-            {/* 4. EVENT SCHEDULE & TIMELINE + CALENDAR SYNC */}
-            <Reveal as="section" id="timeline-section">
-              <SectionHeading
-                eyebrow="The Day of Joy"
-                title="Order of Events"
-                description={`${WEDDING.dateLabel} • ${WEDDING.venue}`}
-              />
-
-              {/* Timeline Items */}
-              <div className="relative mx-auto mt-10 max-w-xl space-y-8">
-                <div className="relative border-l-2 border-[#9792e3]/30 pl-6">
-                  {WEDDING.schedule.map((item) => {
-                    const Icon = SCHEDULE_ICONS[item.icon] ?? Sparkles;
-                    return (
-                      <div key={item.time} className="relative pb-8 last:pb-0">
-                        {/* Timeline Dot */}
-                        <div className="absolute -left-[33px] top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#61E786] bg-[#EDFFEC]">
-                          <Icon className="h-3 w-3 text-[#48435c]" aria-hidden="true" />
-                        </div>
-
-                        {/* Content */}
-                        <div>
-                          <span className="text-xs font-semibold uppercase tracking-wider text-[#6f68b8]">
-                            {item.time}
-                          </span>
-                          <h3 className="font-serif-elegant text-lg font-semibold text-[#48435c]">
-                            {item.title}
-                          </h3>
-                          <p className="text-sm leading-relaxed text-[#5A5766]">{item.desc}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Sync to Calendar Bar */}
-              <div className="mx-auto mt-8 max-w-md rounded-2xl border border-[#9792e3]/25 bg-white/50 p-5 text-center">
-                <p className="text-xs font-semibold text-[#48435c] uppercase tracking-wider mb-3">
-                  Add to your personal schedule
-                </p>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <a
-                    href={generateGoogleCalendarUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-full bg-[#48435c] text-white text-xs font-medium hover:bg-[#5c5675] transition-colors flex items-center gap-2"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-[#61E786]" />
-                    Google Calendar
-                  </a>
-                  <button
-                    onClick={handleDownloadICS}
-                    className="px-4 py-2 rounded-full border border-[#48435c]/30 text-[#48435c] text-xs font-medium hover:bg-white transition-colors flex items-center gap-2"
-                  >
-                    <Download className="w-3.5 h-3.5 text-[#9792e3]" />
-                    Apple / Outlook (.ics)
-                  </button>
-                </div>
-              </div>
-            </Reveal>
-
-            {/* 5. A NOTE ON GIFTS */}
-            <Reveal as="section" className="text-center">
-              <div className="mx-auto max-w-md rounded-3xl border border-dashed border-[#9792e3]/40 bg-white/50 p-6 shadow-sm">
-                <Heart className="w-6 h-6 text-[#9792e3] mx-auto mb-2" />
-                <h3 className="font-serif-elegant font-bold text-lg text-[#48435c]">
-                  A Note on Gifts
-                </h3>
-                <p className="text-xs text-[#5A5766] mt-1 leading-relaxed">
-                  Your presence and warm blessing is the greatest gift of all. If you wish to celebrate with a gift, we have established a honeymoon adventure fund.
-                </p>
-                <button
-                  onClick={() => alert("Honeymoon registry link opened! Thank you for your generosity.")}
-                  className="mt-4 text-sm font-semibold text-[#48435c] underline decoration-[#9792e3]/60 underline-offset-4 hover:decoration-[#9792e3] hover:text-[#6f68b8] transition-all"
-                >
-                  View Honeyfund Registry
-                </button>
-              </div>
-            </Reveal>
-
-            {/* 6. VIRTUAL WISH & GUESTBOOK CANVAS WALL */}
-            <Reveal as="section" className="mx-auto max-w-5xl">
-              <div className="text-center mb-10">
-                <span className="text-xs font-semibold tracking-widest uppercase text-[#9792e3]">
-                  Warm Blessings
-                </span>
-                <h2 className="text-4xl md:text-5xl font-script text-[#48435c] mt-1">
-                  Watercolor Guestbook Wall
-                </h2>
-                <p className="text-xs sm:text-sm font-medium text-[#5A5766] mt-2">
-                  Pin your sweet wishes, blessings, or favorite memories for {WEDDING.partner1} and {WEDDING.partner2}.
-                </p>
-              </div>
-
-              {/* Input Form Card */}
-              <form
-                onSubmit={handlePostWish}
-                className="watercolor-card rounded-3xl p-6 max-w-xl mx-auto mb-10 border border-[#9792e3]/30 shadow-md"
-              >
-                <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="guestbook-name"
-                      className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                    >
-                      Your Name(s)
-                    </label>
-                    <input
-                      type="text"
-                      id="guestbook-name"
-                      required
-                      value={newAuthor}
-                      onChange={(e) => setNewAuthor(e.target.value)}
-                      placeholder="e.g., Aunt Sophia & Uncle David"
-                      className="field w-full px-4 py-2 text-sm rounded-xl text-[#48435c]"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="guestbook-message"
-                      className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                    >
-                      Your Blessing or Note
-                    </label>
-                    <textarea
-                      id="guestbook-message"
-                      required
-                      rows={3}
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Write a warm note for the newlyweds..."
-                      className="field w-full px-4 py-2 text-sm rounded-xl text-[#48435c]"
-                    />
-                  </div>
-
-                  {/* Note Wash Color Picker */}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs text-[#5A5766] font-medium">Watercolor Wash:</span>
-                    <div role="group" aria-label="Watercolor wash color" className="flex gap-2">
-                      {[
-                        { name: "Honeydew", hex: "#EDFFEC" },
-                        { name: "Soft Lilac", hex: "#f3f0ff" },
-                        { name: "Cream Paper", hex: "#ffffff" }
-                      ].map((color) => (
-                        <button
-                          key={color.hex}
-                          type="button"
-                          onClick={() => setSelectedNoteWash(color.hex)}
-                          style={{ backgroundColor: color.hex }}
-                          aria-label={`Select ${color.name} background`}
-                          aria-pressed={selectedNoteWash === color.hex}
-                          className={`w-6 h-6 rounded-full border transition-all ${
-                            selectedNoteWash === color.hex
-                              ? "border-[#48435c] scale-110 shadow-sm"
-                              : "border-[#9792e3]/40"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 rounded-xl bg-[#61E786] text-[#48435c] font-semibold text-xs tracking-wider uppercase hover:bg-[#52d475] transition-all flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    Pin Note to Canvas Wall
-                  </button>
-                </div>
-              </form>
-
-              {/* Guestbook Canvas Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {wishes.map((wish) => (
-                  <div
-                    key={wish.id}
-                    style={{ backgroundColor: wish.color }}
-                    className="relative p-6 rounded-2xl border border-[#9792e3]/30 shadow-[0_12px_30px_-24px_rgba(72,67,92,0.4)] transform hover:-translate-y-1 transition-all"
-                  >
-                    {/* Decorative Push-Pin / Wax Drop */}
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[#9792e3] shadow-sm border border-white flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                    </div>
-
-                    <p className="text-xs sm:text-sm font-serif-elegant italic text-[#48435c] leading-relaxed pt-2">
-                      "{wish.message}"
-                    </p>
-                    <div className="mt-4 pt-3 border-t border-[#9792e3]/20 flex justify-between items-center text-[11px]">
-                      <span className="font-semibold text-[#48435c]">{wish.author}</span>
-                      <span className="text-[#6f68b8]">{wish.date}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-
-            {/* 7. INTERACTIVE RSVP FORM */}
-            <Reveal as="section" id="rsvp-section" className="mx-auto max-w-2xl">
-              <div className="relative overflow-hidden rounded-[1.5rem] border border-dashed border-[#7d77cc]/50 bg-white/60 p-6 sm:p-8">
-                <BotanicalBranch className="absolute -top-6 -right-6 w-24 rotate-45 opacity-30" />
-
-                <div className="text-center mb-8">
-                  <span className="text-xs font-semibold tracking-widest uppercase text-[#9792e3]">
-                    Kindly Respond By {WEDDING.rsvpDeadline}
-                  </span>
-                  <h2 className="text-4xl md:text-5xl font-script text-[#48435c] mt-1">
-                    RSVP
-                  </h2>
-                  <p className="text-xs sm:text-sm font-medium text-[#5A5766] mt-2">
-                    We can't wait to share our special summer day with you!
-                  </p>
-                </div>
-
-                <form onSubmit={handleRsvpSubmit} className="space-y-6 relative z-10">
-                  {/* Attendance Choice */}
-                  <div role="group" aria-labelledby="attendance-label">
-                    <label
-                      id="attendance-label"
-                      className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-2"
-                    >
-                      Will you be attending? *
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setRsvpData({ ...rsvpData, attending: "attending" })}
-                        aria-pressed={rsvpData.attending === "attending"}
-                        className={`py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all flex items-center justify-center gap-2 ${
-                          rsvpData.attending === "attending"
-                            ? "bg-[#61E786] border-[#61E786] text-[#48435c] shadow-sm"
-                            : "bg-white/80 border-[#9792e3]/30 text-[#5A5766] hover:bg-white"
-                        }`}
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        Joyfully Accepts
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRsvpData({ ...rsvpData, attending: "declining" })}
-                        aria-pressed={rsvpData.attending === "declining"}
-                        className={`py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all flex items-center justify-center gap-2 ${
-                          rsvpData.attending === "declining"
-                            ? "bg-[#48435c] border-[#48435c] text-white shadow-sm"
-                            : "bg-white/80 border-[#9792e3]/30 text-[#5A5766] hover:bg-white"
-                        }`}
-                      >
-                        Regretfully Declines
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Guest Name & Email */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        htmlFor="rsvp-name"
-                        className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                      >
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        id="rsvp-name"
-                        required
-                        value={rsvpData.fullName}
-                        onChange={(e) => setRsvpData({ ...rsvpData, fullName: e.target.value })}
-                        placeholder="Your full name"
-                        className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="rsvp-email"
-                        className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                      >
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        id="rsvp-email"
-                        required
-                        value={rsvpData.email}
-                        onChange={(e) => setRsvpData({ ...rsvpData, email: e.target.value })}
-                        placeholder="you@example.com"
-                        className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
-                      />
-                    </div>
-                  </div>
-
-                  {rsvpData.attending === "attending" && (
-                    <>
-                      {/* Guest Count & Meal Selection */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            htmlFor="rsvp-guest-count"
-                            className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                          >
-                            Total Attending Guests
-                          </label>
-                          <select
-                            id="rsvp-guest-count"
-                            value={rsvpData.guestCount}
-                            onChange={(e) => setRsvpData({ ...rsvpData, guestCount: e.target.value })}
-                            className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
-                          >
-                            <option value="1">1 Person (Just Me)</option>
-                            <option value="2">2 Persons (+ Plus One)</option>
-                            <option value="3">3 Persons (Family)</option>
-                            <option value="4">4 Persons (Family)</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label
-                            htmlFor="rsvp-meal"
-                            className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                          >
-                            Entrée Preference
-                          </label>
-                          <select
-                            id="rsvp-meal"
-                            value={rsvpData.mealChoice}
-                            onChange={(e) => setRsvpData({ ...rsvpData, mealChoice: e.target.value })}
-                            className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
-                          >
-                            {WEDDING.mealOptions.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Dietary restrictions */}
-                      <div>
-                        <label
-                          htmlFor="rsvp-dietary"
-                          className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                        >
-                          Dietary Allergies or Restrictions
-                        </label>
-                        <input
-                          type="text"
-                          id="rsvp-dietary"
-                          value={rsvpData.dietary}
-                          onChange={(e) => setRsvpData({ ...rsvpData, dietary: e.target.value })}
-                          placeholder="e.g., Gluten-free, nut allergy, vegetarian"
-                          className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
-                        />
-                      </div>
-
-                      {/* Song request */}
-                      <div>
-                        <label
-                          htmlFor="rsvp-song"
-                          className="block text-xs font-semibold uppercase tracking-wider text-[#48435c] mb-1"
-                        >
-                          Song That Will Get You on the Dance Floor
-                        </label>
-                        <input
-                          type="text"
-                          id="rsvp-song"
-                          value={rsvpData.songRequest}
-                          onChange={(e) => setRsvpData({ ...rsvpData, songRequest: e.target.value })}
-                          placeholder="e.g., Fleetwood Mac - You Make Loving Fun"
-                          className="field w-full px-4 py-2.5 text-sm rounded-xl text-[#48435c]"
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  <button
-                    ref={rsvpSubmitRef}
-                    type="submit"
-                    className="w-full py-4 rounded-xl bg-[#61E786] text-[#48435c] font-bold text-sm tracking-widest uppercase hover:bg-[#52d475] shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Confirm RSVP Response
-                  </button>
-                </form>
-        </div>
-            </Reveal>
-          </div>
-        </div>
-      </main>
+      {/* RSVP and guestbook forms (opened from the book's pages) */}
+      <RsvpFormModal
+        open={showRsvpForm}
+        onClose={() => setShowRsvpForm(false)}
+        data={rsvpData}
+        setData={setRsvpData}
+        onSubmit={handleRsvpSubmit}
+      />
+      <WishModal
+        open={showWishForm}
+        onClose={() => setShowWishForm(false)}
+        author={newAuthor}
+        setAuthor={setNewAuthor}
+        message={newMessage}
+        setMessage={setNewMessage}
+        wash={selectedNoteWash}
+        setWash={setSelectedNoteWash}
+        onSubmit={handlePostWish}
+      />
 
       {/* =========================================================================
           8. RSVP CONFIRMATION MODAL & DIGITAL EVENT PASS
@@ -1136,29 +708,29 @@ export default function WeddingApp() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="pass-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#48435c]/50 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2F4F3E]/50 backdrop-blur-sm animate-fade-in"
         >
-          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-[#9792e3]/40 shadow-2xl overflow-hidden">
+          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border border-[#E07A5F]/40 shadow-2xl overflow-hidden">
             <button
               ref={passCloseButtonRef}
               onClick={() => setShowPassModal(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 text-[#5A5766]"
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 text-[#2F4F3E]/85"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="text-center">
-              <div className="w-12 h-12 mx-auto rounded-full bg-[#EDFFEC] border border-[#61E786] flex items-center justify-center text-[#61E786] mb-3">
+              <div className="w-12 h-12 mx-auto rounded-full bg-[#F4F1DE] border border-[#F2C94C] flex items-center justify-center text-[#E07A5F] mb-3">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
-              <span className="text-xs uppercase tracking-widest font-bold text-[#6f68b8]">
+              <span className="text-xs uppercase tracking-widest font-bold text-[#2F4F3E]/75">
                 RSVP Received With Love
               </span>
-              <h3 id="pass-modal-title" className="text-3xl font-script text-[#48435c] mt-1">
+              <h3 id="pass-modal-title" className="text-3xl font-script text-[#2F4F3E] mt-1">
                 Thank You, {rsvpData.fullName || "Guest"}!
               </h3>
-              <p className="text-xs text-[#5A5766] mt-2 font-serif-elegant italic text-base">
+              <p className="text-xs text-[#2F4F3E]/85 mt-2 font-serif-elegant italic text-base">
                 {rsvpData.attending === "attending"
                   ? "We have reserved your seat in our summer garden celebration. Here is your digital guest pass:"
                   : "We are sad you cannot join us in person, but your love and warm wishes mean the world to us."}
@@ -1167,41 +739,41 @@ export default function WeddingApp() {
 
             {/* Digital Wedding Pass Boarding Ticket */}
             {rsvpData.attending === "attending" && (
-              <div className="mt-6 rounded-2xl bg-[#EDFFEC]/90 border border-dashed border-[#9792e3] p-5 relative">
-                <div className="flex justify-between items-center border-b border-[#9792e3]/30 pb-3">
+              <div className="mt-6 rounded-2xl bg-[#F4F1DE]/90 border border-dashed border-[#E07A5F] p-5 relative">
+                <div className="flex justify-between items-center border-b border-[#E07A5F]/30 pb-3">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-[#6f68b8]">
+                    <span className="text-[10px] uppercase font-bold text-[#2F4F3E]/75">
                       Official Guest Pass
                     </span>
-                    <h4 className="font-serif-elegant font-bold text-lg text-[#48435c]">
+                    <h4 className="font-serif-elegant font-bold text-lg text-[#2F4F3E]">
                       {WEDDING.partner1} &amp; {WEDDING.partner2}&rsquo;s Wedding
                     </h4>
                   </div>
-                  <Sparkles className="w-5 h-5 text-[#61E786]" />
+                  <Sparkles className="w-5 h-5 text-[#E07A5F]" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-3 text-xs text-[#5A5766]">
+                <div className="grid grid-cols-2 gap-3 pt-3 text-xs text-[#2F4F3E]/85">
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Guest</span>
-                    <span className="font-semibold text-[#48435c]">{rsvpData.fullName}</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#2F4F3E]/75">Guest</span>
+                    <span className="font-semibold text-[#2F4F3E]">{rsvpData.fullName}</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Party Size</span>
-                    <span className="font-semibold text-[#48435c]">{rsvpData.guestCount} Guest(s)</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#2F4F3E]/75">Party Size</span>
+                    <span className="font-semibold text-[#2F4F3E]">{rsvpData.guestCount} Guest(s)</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Date</span>
-                    <span className="font-semibold text-[#48435c]">{WEDDING.dateLabel}</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#2F4F3E]/75">Date</span>
+                    <span className="font-semibold text-[#2F4F3E]">{WEDDING.dateLabel}</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] uppercase tracking-wider text-[#6f68b8]">Venue</span>
-                    <span className="font-semibold text-[#48435c]">{WEDDING.venue}</span>
+                    <span className="block text-[9px] uppercase tracking-wider text-[#2F4F3E]/75">Venue</span>
+                    <span className="font-semibold text-[#2F4F3E]">{WEDDING.venue}</span>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#9792e3]/30 flex justify-between items-center text-[10px] text-[#48435c]">
+                <div className="mt-4 pt-3 border-t border-[#E07A5F]/30 flex justify-between items-center text-[10px] text-[#2F4F3E]">
                   <span>Entrée: {rsvpData.mealChoice}</span>
-                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-[#9792e3]/30 font-semibold">
+                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-[#E07A5F]/30 font-semibold">
                     #PASS-{passCode}
                   </span>
                 </div>
@@ -1213,14 +785,14 @@ export default function WeddingApp() {
                 onClick={() => {
                   window.print();
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-[#61E786] text-[#48435c] font-bold text-xs uppercase tracking-wider hover:bg-[#52d475] transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl bg-[#F2C94C] text-[#2F4F3E] font-bold text-xs uppercase tracking-wider hover:bg-[#E6BB36] transition-all flex items-center justify-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" />
                 Save / Print Pass
               </button>
               <button
                 onClick={() => setShowPassModal(false)}
-                className="px-4 py-2.5 rounded-xl border border-[#48435c]/20 text-[#48435c] text-xs font-semibold hover:bg-gray-50 transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-[#2F4F3E]/20 text-[#2F4F3E] text-xs font-semibold hover:bg-gray-50 transition-colors"
               >
                 Done
               </button>
@@ -1228,39 +800,6 @@ export default function WeddingApp() {
           </div>
         </div>
       )}
-
-      {/* =========================================================================
-          9. FOOTER
-      ========================================================================= */}
-      <footer className="relative z-20 overflow-hidden px-4 pb-10 pt-6 sm:pb-16 sm:pt-10">
-        {/* Soft watercolor bloom behind the keepsake card */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_65%,rgba(97,231,134,0.14),rgba(151,146,227,0.08)_45%,transparent_72%)]" />
-
-        <div className="relative mx-auto max-w-5xl">
-          <div className="relative overflow-hidden rounded-[2rem] border border-[#9792e3]/30 bg-gradient-to-b from-white/80 via-white/70 to-[#f8fffa]/80 px-6 py-10 text-center shadow-[0_24px_70px_-40px_rgba(72,67,92,0.35)] backdrop-blur-md sm:px-10 sm:py-12 md:py-14">
-            {/* Inset stationery frame */}
-            <div className="pointer-events-none absolute inset-2 rounded-[1.6rem] border border-dashed border-[#9792e3]/30" />
-
-            {/* Botanical corners */}
-            <BotanicalBranch className="absolute -bottom-9 -left-9 w-32 rotate-12 opacity-25 sm:w-44" />
-            <BotanicalBranch className="absolute -bottom-9 -right-9 w-32 -rotate-12 scale-x-[-1] opacity-25 sm:w-44" />
-
-            <div className="relative">
-              <div className="flex items-center justify-center gap-3">
-                <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#9792e3]/50 sm:w-16" />
-                <Heart className="h-3.5 w-3.5 fill-[#61E786] text-[#61E786]" />
-                <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#9792e3]/50 sm:w-16" />
-              </div>
-
-              <h3 className="mt-4 font-script text-[clamp(2.1rem,10.5vw,3rem)] leading-tight text-[#48435c] sm:text-6xl md:text-7xl">
-                Enjelaine{" "}
-                <span className="font-serif-elegant font-light text-[#9792e3]">&</span>{" "}
-                Erwin
-              </h3>
-            </div>
-          </div>
-        </div>
-      </footer>
 
     </div>
   );

@@ -1,66 +1,62 @@
-import { forwardRef } from "react";
-import { ChevronDown, Heart } from "lucide-react";
-import KeepsakeCard from "./KeepsakeCard";
+import React from "react";
+import { Heart } from "lucide-react";
 
-/**
- * The static portrait front cover: the first face of the keepsake card.
- * Purely presentational — scrolling/scrubbing choreography is added later.
- */
-const FrontCover = forwardRef(function FrontCover({ wedding }, ref) {
+// Front cover of the invitation. It uses the same paper as the back cover
+// (.book-page), so it fits the card exactly.
+//
+// COUPLE ILLUSTRATION
+// Put your SVG in /public (for example /public/couple.svg) and add this to WEDDING in config:
+//   coupleIllustration: { src: '/couple.svg', alt: 'Enjelaine and Erwin' },
+// Until `src` is set, a dashed placeholder frame is shown in its place.
+export default function FrontCover({ wedding }) {
+  const art = wedding.coupleIllustration;
+
   return (
-    <KeepsakeCard
-      ref={ref}
-      className="cover-card flex flex-col items-center justify-center px-6 py-8 text-center sm:px-10"
-    >
-      <div className="flex w-full flex-col items-center gap-[clamp(0.4rem,1.6vh,1.25rem)]">
-        <p className="text-[clamp(0.65rem,2.2vw,0.8rem)] font-semibold uppercase tracking-[0.2em] text-[#6f68b8]">
-          Together with their families
-        </p>
-
-        <h1 className="font-script text-[clamp(2.4rem,10vw,5.5rem)] leading-[0.95] text-[#48435c]">
-          <span className="block sm:inline">{wedding.partner1}</span>
-          <span className="mx-1 font-serif-elegant text-[#7d77cc] sm:mx-2">&amp;</span>
-          <span className="block sm:inline">{wedding.partner2}</span>
-        </h1>
-
-        {/* Heart divider */}
-        <div className="flex items-center justify-center gap-3" aria-hidden="true">
-          <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#9792e3]/50 sm:w-16" />
-          <Heart className="h-3.5 w-3.5 fill-[#61E786] text-[#61E786]" />
-          <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#9792e3]/50 sm:w-16" />
+    <div className="book-page book-page--cover">
+      <div className="flex h-full w-full min-h-0 flex-col items-center justify-between gap-3 text-center">
+        {/* Illustration slot: takes whatever height the text below leaves over */}
+        <div className="flex min-h-[7rem] w-full flex-1 items-center justify-center">
+          {art?.src ? (
+            <img
+              src={art.src}
+              alt={art.alt ?? `${wedding.partner1} and ${wedding.partner2}`}
+              className="max-h-full max-w-full object-contain"
+              draggable="false"
+            />
+          ) : (
+            <div
+              className="flex h-full max-h-[22rem] w-full max-w-[18rem] flex-col items-center justify-center gap-1 border border-dashed border-[#2F4F3E]/35 bg-[#F4F1DE]/60 px-4 text-[#2F4F3E]/70"
+              role="img"
+              aria-label="Couple illustration placeholder"
+            >
+              <span className="font-serif-elegant text-base italic sm:text-lg">Couple illustration</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest sm:text-xs">SVG goes here</span>
+            </div>
+          )}
         </div>
 
-        <div className="font-body text-[#48435c]">
-          <p className="text-[clamp(1rem,3.2vw,1.35rem)] font-semibold">
+        <div className="w-full shrink-0">
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-px w-8 bg-gradient-to-r from-transparent to-[#E07A5F]/60 sm:w-14" />
+            <Heart className="h-3.5 w-3.5 fill-[#E07A5F] text-[#E07A5F]" aria-hidden="true" />
+            <span className="h-px w-8 bg-gradient-to-l from-transparent to-[#E07A5F]/60 sm:w-14" />
+          </div>
+
+          <h1 className="mt-3 font-script leading-[1.05] text-[#2F4F3E] text-[clamp(2.4rem,16cqw,4.25rem)]">
+            {wedding.partner1}
+            <span className="block font-serif-elegant text-[0.4em] font-light leading-tight text-[#E07A5F]">&amp;</span>
+            {wedding.partner2}
+          </h1>
+
+          <p className="mt-3 font-serif-elegant font-semibold uppercase tracking-[0.18em] text-[#2F4F3E] text-[clamp(0.72rem,3.4cqw,0.95rem)]">
             {wedding.dateLabel}
           </p>
-          <p className="text-[clamp(0.85rem,2.8vw,1.15rem)] font-medium leading-snug">
-            {wedding.timeLabel} · {wedding.venue}
-          </p>
-          <p className="text-[clamp(0.7rem,2.4vw,0.95rem)] text-[#6f68b8]">
-            {wedding.address}
+          <p className="mt-1 font-serif-elegant italic text-[#2F4F3E]/80 text-[clamp(0.85rem,4cqw,1.05rem)]">
+            {wedding.venue}
+            {wedding.address ? ` · ${wedding.address}` : ""}
           </p>
         </div>
-
-        <p className="max-w-[36ch] font-serif-elegant text-[clamp(1rem,3vw,1.4rem)] italic leading-snug text-[#5A5766]">
-          request the pleasure of your company at their marriage celebration.
-        </p>
-
-        <p className="text-[clamp(0.7rem,2.4vw,0.9rem)] text-[#6f68b8]">
-          {wedding.dressCode}
-        </p>
-
-        <a
-          href="#inside-card"
-          aria-label="Open the invitation and read the details"
-          className="mt-[clamp(0.25rem,1vh,0.75rem)] flex items-center gap-1.5 rounded-full border border-[#9792e3]/30 bg-white/60 px-5 py-2 text-xs font-semibold uppercase tracking-widest text-[#48435c] shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:shadow"
-        >
-          Open Invitation
-          <ChevronDown aria-hidden="true" className="h-4 w-4 animate-bounce text-[#61E786]" />
-        </a>
       </div>
-    </KeepsakeCard>
+    </div>
   );
-});
-
-export default FrontCover;
+}

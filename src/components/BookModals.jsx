@@ -10,12 +10,15 @@ function useModalBehavior(open, onClose) {
   useEffect(() => {
     if (!open) return undefined;
     const opener = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKey = (event) => {
       if (event.key === "Escape") closeRef.current();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
       opener?.focus?.();
     };
   }, [open]);
@@ -33,14 +36,14 @@ const ModalShell = ({ open, onClose, labelId, children }) => {
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-[#48435c]/50 p-4 backdrop-blur-sm"
+      className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-[#2F4F3E]/50 p-4 backdrop-blur-sm"
     >
-      <div className="relative max-h-[92svh] w-full max-w-lg overflow-y-auto rounded-3xl border border-[#9792e3]/40 bg-white p-6 shadow-2xl sm:p-8">
+      <div className="relative max-h-[92svh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-3xl border border-[#E07A5F]/40 bg-white p-6 shadow-2xl sm:p-8">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[#5A5766] hover:bg-gray-100"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-[#2F4F3E]/85 hover:bg-gray-100"
         >
           <X className="h-5 w-5" />
         </button>
@@ -50,17 +53,17 @@ const ModalShell = ({ open, onClose, labelId, children }) => {
   );
 };
 
-const labelClass = "mb-1 block text-xs font-semibold uppercase tracking-wider text-[#48435c]";
+const labelClass = "mb-1 block text-xs font-semibold uppercase tracking-wider text-[#2F4F3E]";
 
 // ------------------------------------------------------------------ RSVP
 export function RsvpFormModal({ open, onClose, data, setData, onSubmit }) {
   return (
     <ModalShell open={open} onClose={onClose} labelId="rsvp-modal-title">
       <div className="mb-6 text-center">
-        <span className="text-xs font-semibold uppercase tracking-widest text-[#9792e3]">
+        <span className="text-xs font-semibold uppercase tracking-widest text-[#2F4F3E]/70">
           Kindly Respond By {WEDDING.rsvpDeadline}
         </span>
-        <h2 id="rsvp-modal-title" className="mt-1 font-script text-5xl text-[#48435c]">
+        <h2 id="rsvp-modal-title" className="mt-1 font-script text-5xl text-[#2F4F3E]">
           RSVP
         </h2>
       </div>
@@ -77,8 +80,8 @@ export function RsvpFormModal({ open, onClose, data, setData, onSubmit }) {
               aria-pressed={data.attending === "attending"}
               className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-all ${
                 data.attending === "attending"
-                  ? "border-[#61E786] bg-[#61E786] text-[#48435c] shadow-sm"
-                  : "border-[#9792e3]/30 bg-white/80 text-[#5A5766] hover:bg-white"
+                  ? "border-[#F2C94C] bg-[#F2C94C] text-[#2F4F3E] shadow-sm"
+                  : "border-[#E07A5F]/30 bg-white/80 text-[#2F4F3E]/85 hover:bg-white"
               }`}
             >
               <CheckCircle2 className="h-4 w-4" />
@@ -90,8 +93,8 @@ export function RsvpFormModal({ open, onClose, data, setData, onSubmit }) {
               aria-pressed={data.attending === "declining"}
               className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-semibold uppercase tracking-wider transition-all ${
                 data.attending === "declining"
-                  ? "border-[#48435c] bg-[#48435c] text-white shadow-sm"
-                  : "border-[#9792e3]/30 bg-white/80 text-[#5A5766] hover:bg-white"
+                  ? "border-[#2F4F3E] bg-[#2F4F3E] text-white shadow-sm"
+                  : "border-[#E07A5F]/30 bg-white/80 text-[#2F4F3E]/85 hover:bg-white"
               }`}
             >
               Regretfully Declines
@@ -201,7 +204,7 @@ export function RsvpFormModal({ open, onClose, data, setData, onSubmit }) {
 
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#61E786] py-4 text-sm font-bold uppercase tracking-widest text-[#48435c] shadow-lg transition-all hover:-translate-y-0.5 hover:bg-[#52d475] hover:shadow-xl"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F2C94C] py-4 text-sm font-bold uppercase tracking-widest text-[#2F4F3E] shadow-lg transition-all hover:-translate-y-0.5 hover:bg-[#E6BB36] hover:shadow-xl"
         >
           <Send className="h-4 w-4" />
           Confirm RSVP Response
@@ -213,8 +216,8 @@ export function RsvpFormModal({ open, onClose, data, setData, onSubmit }) {
 
 // ------------------------------------------------------------- Guestbook
 const WASHES = [
-  { name: "Honeydew", hex: "#EDFFEC" },
-  { name: "Soft Lilac", hex: "#f3f0ff" },
+  { name: "Warm Linen", hex: "#F4F1DE" },
+  { name: "Peach Blush", hex: "#FBE4DC" },
   { name: "Cream Paper", hex: "#ffffff" },
 ];
 
@@ -222,8 +225,8 @@ export function WishModal({ open, onClose, author, setAuthor, message, setMessag
   return (
     <ModalShell open={open} onClose={onClose} labelId="wish-modal-title">
       <div className="mb-6 text-center">
-        <span className="text-xs font-semibold uppercase tracking-widest text-[#9792e3]">Warm Blessings</span>
-        <h2 id="wish-modal-title" className="mt-1 font-script text-5xl text-[#48435c]">
+        <span className="text-xs font-semibold uppercase tracking-widest text-[#2F4F3E]/70">Warm Blessings</span>
+        <h2 id="wish-modal-title" className="mt-1 font-script text-5xl text-[#2F4F3E]">
           Leave a Blessing
         </h2>
       </div>
@@ -260,7 +263,7 @@ export function WishModal({ open, onClose, author, setAuthor, message, setMessag
         </div>
 
         <div className="flex items-center justify-between pt-1">
-          <span className="text-xs font-medium text-[#5A5766]">Watercolor Wash:</span>
+          <span className="text-xs font-medium text-[#2F4F3E]/85">Watercolor Wash:</span>
           <div role="group" aria-label="Watercolor wash color" className="flex gap-2">
             {WASHES.map((color) => (
               <button
@@ -271,7 +274,7 @@ export function WishModal({ open, onClose, author, setAuthor, message, setMessag
                 aria-label={`Select ${color.name} background`}
                 aria-pressed={wash === color.hex}
                 className={`h-6 w-6 rounded-full border transition-all ${
-                  wash === color.hex ? "scale-110 border-[#48435c] shadow-sm" : "border-[#9792e3]/40"
+                  wash === color.hex ? "scale-110 border-[#2F4F3E] shadow-sm" : "border-[#E07A5F]/40"
                 }`}
               />
             ))}
@@ -280,7 +283,7 @@ export function WishModal({ open, onClose, author, setAuthor, message, setMessag
 
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#61E786] py-2.5 text-xs font-semibold uppercase tracking-wider text-[#48435c] shadow-sm transition-all hover:bg-[#52d475]"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F2C94C] py-2.5 text-xs font-semibold uppercase tracking-wider text-[#2F4F3E] shadow-sm transition-all hover:bg-[#E6BB36]"
         >
           <Send className="h-3.5 w-3.5" />
           Pin Note to the Wall

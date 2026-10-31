@@ -34,23 +34,23 @@ function useMediaQuery(query) {
 const Placeholder = ({ label }) => (
   <div className="book-page">
     <div className="text-center">
-      <p className="font-serif-elegant text-2xl italic text-[#48435c]">{label}</p>
+      <p className="font-serif-elegant text-2xl italic text-[#2F4F3E]">{label}</p>
     </div>
   </div>
 );
 
 // Closing face of the book: same look as the footer keepsake card.
 export const BackCover = ({ wedding }) => (
-  <div className="book-page">
+  <div className="book-page book-page--cover">
     <div className="text-center">
       <div className="flex items-center justify-center gap-3">
-        <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#9792e3]/50 sm:w-16" />
-        <Heart className="h-3.5 w-3.5 fill-[#61E786] text-[#61E786]" />
-        <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#9792e3]/50 sm:w-16" />
+        <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#E07A5F]/50 sm:w-16" />
+        <Heart className="h-3.5 w-3.5 fill-[#E07A5F] text-[#E07A5F]" />
+        <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#E07A5F]/50 sm:w-16" />
       </div>
-      <h3 className="mt-4 font-script text-5xl leading-tight text-[#48435c] sm:text-6xl">
-        {wedding.partner1}{" "}
-        <span className="font-serif-elegant font-light text-[#9792e3]">&amp;</span>{" "}
+      <h3 className="mt-4 font-script leading-[1.05] text-[#2F4F3E] text-[clamp(2.4rem,16cqw,4.25rem)]">
+        {wedding.partner1}
+        <span className="block font-serif-elegant text-[0.4em] font-light leading-tight text-[#E07A5F]">&amp;</span>
         {wedding.partner2}
       </h3>
     </div>
