@@ -18,6 +18,13 @@
   touch-action: pan-y;
 }
 
+/* Vertical page scrolling is off while the book is on screen (see Book.jsx). Scrollable
+   areas inside a page (long content) still scroll normally. */
+html.book-locked {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* Stop the browser's own horizontal swipe (history back/forward, rubber-banding) */
 html,
 body {

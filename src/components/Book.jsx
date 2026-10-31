@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
 import FrontCover from "./FrontCover";
 import { useBookTimeline } from "../hooks/useBookTimeline";
@@ -79,6 +79,16 @@ export default function Book({ wedding, leaves, controlRef }) {
   const mobile = useMediaQuery(MOBILE_QUERY);
   const fallback = useMediaQuery(FALLBACK_QUERY);
 
+  // The book is turned by swiping, dragging, arrow keys and the dots: the visitor cannot scroll
+  // the page itself. (The page still scrolls under the hood, driven by those controls, because
+  // that scroll position is what the page-turn animation follows.) Not locked in the stacked
+  // fallback layout, which has to scroll normally.
+  useLayoutEffect(() => {
+    if (fallback) return undefined;
+    document.documentElement.classList.add("book-locked");
+    return () => document.documentElement.classList.remove("book-locked");
+  }, [fallback]);
+
   const source = leaves ?? defaultLeaves(wedding);
   const pages = source.flatMap((leaf) => [leaf.front, leaf.back]);
   // Mobile shows one page at a time, so every page becomes its own leaf.
@@ -107,6 +117,19 @@ export default function Book({ wedding, leaves, controlRef }) {
       face.inert = !visible;
     });
   });
+
+  // The book turns by swipe / drag / keys / dots only: the visitor's own vertical scrolling
+  // is switched off. Programmatic scrolling (used by the page turns) still works, and a long
+  // page can still scroll inside its own frame. Not applied to the stacked fallback layout.
+  useEffect(() => {
+    if (fallback) return undefined;
+    const html = document.documentElement;
+    const previous = html.style.overflow;
+    html.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = previous;
+    };
+  }, [fallback]);
 
   // Move one rest point forward (+1) or back (-1). Rapid gestures build on the
   // last target instead of the (still scrolling) current page, so two quick swipes go two pages.
@@ -216,10 +239,10 @@ export default function Book({ wedding, leaves, controlRef }) {
       if (document.querySelector('[role="dialog"]')) return;
       if (event.target.closest?.("input, textarea, select, [contenteditable='true']")) return;
 
-      if (event.key === "ArrowRight" || event.key === "PageDown") {
+      if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === "PageDown") {
         event.preventDefault();
         step(1);
-      } else if (event.key === "ArrowLeft" || event.key === "PageUp") {
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp" || event.key === "PageUp") {
         event.preventDefault();
         step(-1);
       }
