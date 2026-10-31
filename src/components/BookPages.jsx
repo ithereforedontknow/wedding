@@ -57,9 +57,9 @@ const StoryPage = () => (
   <Page decor={<BotanicalBranch className="pointer-events-none absolute -bottom-6 -left-4 w-32 opacity-30" />}>
     <SectionHeading eyebrow="Chapter One" title="Our Summer Story" />
     <p className="mt-6 text-center font-serif-elegant text-base italic leading-relaxed sm:text-lg text-[#2F4F3E]/85">
-      "We met under the dappled shade of a botanical garden in July, sharing a love for chilled lemonade, warm guitar
+      We met under the dappled shade of a botanical garden in July, sharing a love for chilled lemonade, warm guitar
       songs, and wandering gravel trails. Seven summers later, Erwin knelt in that very orchard at golden hour. We
-      couldn’t imagine stepping into this lifetime together without our closest family and friends."
+      couldn’t imagine stepping into this lifetime together without our closest family and friends.
     </p>
   </Page>
 );
@@ -97,9 +97,6 @@ const SchedulePage = ({ wedding }) => (
             className="flex w-full flex-col items-center pb-3 text-center last:pb-0 sm:pb-5"
           >
             <div className="flex items-center gap-2">
-              {/* <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#F2C94C] bg-[#F4F1DE]">
-                <Icon className="h-3 w-3 text-[#2F4F3E]" aria-hidden="true" />
-              </div>*/}
               <span className="text-xs font-semibold uppercase tracking-wider text-[#2F4F3E]/75">
                 {item.time}
               </span>

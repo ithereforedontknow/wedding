@@ -8,7 +8,7 @@ export const WEDDING = {
   timeLabel: '2:00 in the afternoon',
   venue: 'Casa De Hufana',
   address: 'Agoo, La Union, Philippines',
-  mapUrl: 'https://maps.google.com/?q=La+Union+Philippines',
+  mapUrl: 'https://maps.app.goo.gl/1MWFmEPmzru1m4QXA',
   rsvpDeadline: 'March 1, 2027',
   dressCode: 'Garden formal. Warm summer colors, linen and florals are all welcome.',
   durationHours: 6.5,
