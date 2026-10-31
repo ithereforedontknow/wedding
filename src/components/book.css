@@ -1,0 +1,246 @@
+/* --- Booklet stage: one tall scroll area, one pinned stage --- */
+.book-scroll {
+  --book-scroll: 700svh;
+  height: var(--book-scroll);
+}
+
+.book-stage {
+  --page-w: min(44vw, 540px);
+  --page-h: min(84svh, 760px);
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100svh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* The book is two pages wide (spine in the middle). The timeline shifts it
+   left/right so the closed cover and closed back cover stay centered. */
+.book {
+  position: relative;
+  width: calc(var(--page-w) * 2);
+  height: var(--page-h);
+  perspective: 2200px;
+  will-change: transform;
+}
+
+/* A leaf is hinged at the spine and starts on the right half. */
+.book-leaf {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+}
+
+.book-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.book-face--back {
+  transform: rotateY(180deg);
+}
+
+/* Spine shade: right pages darken at their left edge, left pages at their right edge. */
+.book-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(47, 79, 62, 0.07), transparent 6%);
+}
+
+.book-face--back::after {
+  background: linear-gradient(to left, rgba(47, 79, 62, 0.07), transparent 6%);
+}
+
+/* Paper: square corners, no drop shadow, a hairline border and a dashed inner frame. */
+.book-page {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+  padding: 2rem;
+  border: 1px solid rgba(47, 79, 62, 0.22);
+  /* Opaque on purpose: stacked pages must not show through each other. */
+  background: linear-gradient(180deg, #fffefa, #fbf8ec 55%, #fffefa);
+}
+
+.book-page::before {
+  content: "";
+  position: absolute;
+  inset: 0.5rem;
+  border: 1px dashed rgba(224, 122, 95, 0.4);
+  pointer-events: none;
+}
+
+/* Cover pages size their type from the page width (cqw), so they fit on any screen. */
+.book-page--cover {
+  container-type: inline-size;
+}
+
+/* Every page component fills its half of the book */
+.book-face > * {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Page-turn polish --- */
+.book-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(47, 79, 62, 0.55), rgba(47, 79, 62, 0) 70%);
+}
+
+.book-face--back .book-shade {
+  background: linear-gradient(to left, rgba(47, 79, 62, 0.55), rgba(47, 79, 62, 0) 70%);
+}
+
+/* Paper thickness: thin striped strips at the outer edge of each stack */
+.book-edge {
+  position: absolute;
+  top: 1.2%;
+  width: 10px;
+  height: 97.6%;
+  pointer-events: none;
+  background: repeating-linear-gradient(to right, #FBF9EE 0 2px, #E8E3C6 2px 3px);
+}
+
+.book-edge--right {
+  left: 100%;
+  transform-origin: left center;
+}
+
+.book-edge--left {
+  right: 100%;
+  transform-origin: right center;
+}
+
+/* The book has no ground shadow (the element stays because the timeline animates it). */
+.book-ground {
+  display: none;
+}
+
+/* --- Page dots --- */
+.book-dots {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  gap: 0.625rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(224, 122, 95, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(6px);
+  transform: translateX(-50%);
+}
+
+.book-dot {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: rgba(224, 122, 95, 0.4);
+  transition: transform 200ms ease, background-color 200ms ease;
+}
+
+/* Bigger tap target than the visible dot */
+.book-dot::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
+}
+
+.book-dot.is-active {
+  background: #2F4F3E;
+  transform: scale(1.35);
+}
+
+/* --- Fallback: reduced motion or short screens, pages stacked vertically --- */
+.book-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem 3rem;
+}
+
+.book-fallback-item {
+  width: var(--card-width, min(92vw, 720px));
+}
+
+.book-fallback .book-page {
+  min-height: 12rem;
+}
+
+.book-fallback .book-page--cover {
+  min-height: min(82svh, 720px);
+}
+
+.book-fallback .book-page--flow {
+  display: block;
+  height: auto;
+}
+
+.book-fallback .book-page-scroll {
+  position: relative;
+  inset: auto;
+  overflow: visible;
+}
+
+/* --- Mobile: one page at a time, no spread --- */
+@media (max-width: 767px) {
+  .book-scroll {
+    --book-scroll: 900svh;
+  }
+
+  .book-stage {
+    --page-w: min(92vw, 440px);
+    --page-h: min(84svh, 720px);
+  }
+
+  .book {
+    width: var(--page-w);
+  }
+
+  .book-leaf {
+    left: 0;
+    width: 100%;
+  }
+
+  .book-edge {
+    display: none;
+  }
+
+  .book-page {
+    padding: 1.25rem;
+  }
+
+  /* One page at a time on phones: no spine, so no spine crease */
+  .book-face::after {
+    display: none;
+  }
+
+  .book-page::before {
+    inset: 0.4rem;
+  }
+
+  .book-dots {
+    bottom: 0.5rem;
+  }
+}

@@ -11,6 +11,7 @@ export const WEDDING = {
   mapUrl: 'https://maps.google.com/?q=La+Union+Philippines',
   rsvpDeadline: 'March 1, 2027',
   dressCode: 'Garden formal. Warm summer colors, linen and florals are all welcome.',
+  durationHours: 6.5,
 
   // The personal letter shown after the hero.
   message: {
@@ -39,11 +40,12 @@ export const WEDDING = {
 
   // icon: sparkles | heart | wine | utensils | music
   schedule: [
-    { time: '3:30 PM', title: 'Guest Arrival', note: 'Welcome drinks among the blooms', icon: 'sparkles' },
-    { time: '4:00 PM', title: 'Ceremony', note: 'Garden vows', icon: 'heart' },
-    { time: '5:00 PM', title: 'Cocktail Hour', note: 'Light bites and live music', icon: 'wine' },
-    { time: '6:30 PM', title: 'Dinner & Toasts', note: 'Dinner under the string lights', icon: 'utensils' },
-    { time: '8:00 PM', title: 'Dancing', note: 'Celebrate into the night', icon: 'music' },
+    { time: '1:30 PM', title: 'Guest Arrival', note: 'Welcome drinks in the garden', desc: 'Arrive, find your seat, and settle in with a welcome drink before the ceremony.', icon: 'sparkles' },
+    { time: '2:00 PM', title: 'Ceremony', note: 'Garden vows', desc: 'Vows exchanged in the garden, surrounded by family and friends.', icon: 'heart' },
+    { time: '2:45 PM', title: 'Aperitivo', note: 'Light bites and live music', desc: 'Light bites, cocktails, and golden-hour portraits on the lawn.', icon: 'wine' },
+    { time: '4:15 PM', title: 'Dinner & Toasts', note: 'Dinner under the string lights', desc: 'A seated dinner accompanied by heartfelt toasts.', icon: 'utensils' },
+    { time: '6:00 PM', title: 'Dancing', note: 'Celebrate into the night', desc: 'First dance, then dancing under the stars.', icon: 'music' },
+    { time: '8:30 PM', title: 'Send-off', note: 'A sparkling farewell', desc: 'Wave goodbye as the newlyweds head into the night.', icon: 'sparkles' },
   ],
   mealOptions: ['Grilled fish', 'Roast chicken', 'Vegetarian'],
   // Optional: paste a Formspree / Getform / your own API URL to receive RSVPs.
