@@ -526,7 +526,7 @@ export default function WeddingApp() {
           {isPlayingMusic ? (
             <>
               <Volume2 className="w-4 h-4 text-[#E07A5F]" />
-              <span className="hidden sm:inline">Acoustic Strings</span>
+              <span className="hidden sm:inline">The Shire</span>
             </>
           ) : (
             <>
