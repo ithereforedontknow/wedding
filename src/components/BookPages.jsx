@@ -88,17 +88,26 @@ const SchedulePage = ({ wedding }) => (
       title="Order of Events"
       description={`${wedding.dateLabel} • ${wedding.venue}`}
     />
-    <div className="relative mt-5 border-l-2 sm:mt-8 border-[#E07A5F]/30 pl-6">
+    <div className="mx-auto mt-5 flex max-w-sm flex-col items-center sm:mt-8">
       {wedding.schedule.map((item) => {
         const Icon = SCHEDULE_ICONS[item.icon] ?? Sparkles;
         return (
-          <div key={item.time} className="relative pb-3 last:pb-0 sm:pb-5">
-            <div className="absolute -left-[33px] top-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#F2C94C] bg-[#F4F1DE]">
-              <Icon className="h-3 w-3 text-[#2F4F3E]" aria-hidden="true" />
+          <div
+            key={item.time}
+            className="flex w-full flex-col items-center pb-3 text-center last:pb-0 sm:pb-5"
+          >
+            <div className="flex items-center gap-2">
+              {/* <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#F2C94C] bg-[#F4F1DE]">
+                <Icon className="h-3 w-3 text-[#2F4F3E]" aria-hidden="true" />
+              </div>*/}
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#2F4F3E]/75">
+                {item.time}
+              </span>
             </div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#2F4F3E]/75">{item.time}</span>
-            <h3 className="font-serif-elegant text-lg font-semibold leading-tight text-[#2F4F3E]">{item.title}</h3>
-            <p className="text-sm leading-snug text-[#2F4F3E]/85">{item.note}</p>
+            <h3 className="font-serif-elegant text-lg font-semibold leading-tight text-[#2F4F3E]">
+              {item.title}
+            </h3>
+            <p className="max-w-xs text-sm leading-snug text-[#2F4F3E]/85">{item.note}</p>
           </div>
         );
       })}

@@ -84,7 +84,7 @@ body {
   content: "";
   position: absolute;
   inset: 0.5rem;
-  border: 1px dashed rgba(224, 122, 95, 0.4);
+  /*border: 1px dashed rgba(224, 122, 95, 0.4);*/
   pointer-events: none;
 }
 

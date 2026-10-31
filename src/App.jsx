@@ -470,18 +470,62 @@ export default function WeddingApp() {
     };
   }, [showPassModal]);
 
-  // Play or pause the looping ambience track when the toggle changes.
+  // Try to start the ambience as soon as the page loads. Browsers often block
+  // audible autoplay, so fall back to starting on the first user interaction.
   useEffect(() => {
     const audio = ambienceRef.current;
     if (!audio) return;
 
-    if (isPlayingMusic) {
-      audio.volume = 0.35;
-      audio.play().catch(() => setIsPlayingMusic(false));
-    } else {
-      audio.pause();
+    audio.volume = 0.35;
+    let cancelled = false;
+
+    const removeInteractionListeners = () => {
+      window.removeEventListener("pointerdown", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+      window.removeEventListener("touchstart", handleFirstInteraction);
+    };
+
+    const startPlayback = () => {
+      audio.play().then(() => {
+        if (cancelled) return;
+        setIsPlayingMusic(true);
+        removeInteractionListeners();
+      }).catch(() => {
+        // Autoplay was blocked; the interaction listeners will retry.
+      });
+    };
+
+    function handleFirstInteraction() {
+      startPlayback();
     }
-  }, [isPlayingMusic]);
+
+    startPlayback();
+    window.addEventListener("pointerdown", handleFirstInteraction);
+    window.addEventListener("keydown", handleFirstInteraction);
+    window.addEventListener("touchstart", handleFirstInteraction);
+
+    return () => {
+      cancelled = true;
+      removeInteractionListeners();
+    };
+  }, []);
+
+  // Toggle the looping ambience track. Playback is started directly in the
+  // click handler so mobile browsers treat it as a user-initiated gesture.
+  const handleToggleAmbience = () => {
+    const audio = ambienceRef.current;
+    if (!audio) return;
+
+    if (isPlayingMusic) {
+      audio.pause();
+      setIsPlayingMusic(false);
+      return;
+    }
+
+    audio.volume = 0.35;
+    setIsPlayingMusic(true);
+    audio.play().catch(() => setIsPlayingMusic(false));
+  };
 
   // Google Calendar Link Generator
   const generateGoogleCalendarUrl = () => {
@@ -518,8 +562,8 @@ export default function WeddingApp() {
       {/* Background Ambience Audio Toggle Button */}
       <div className="fixed top-5 right-5 z-40">
         <button
-          onClick={() => setIsPlayingMusic((playing) => !playing)}
-          aria-label="Toggle background ambience"
+          onClick={handleToggleAmbience}
+          aria-label={isPlayingMusic ? "Pause background ambience" : "Play background ambience"}
           aria-pressed={isPlayingMusic}
           className="flex items-center gap-2 px-3 py-2 rounded-full watercolor-card border border-[#E07A5F]/40 text-[#2F4F3E] hover:bg-white transition-all text-xs font-medium"
         >
@@ -665,9 +709,7 @@ export default function WeddingApp() {
                   aria-label="Break seal and open invitation"
                 >
                   <div
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#2F4F3E] via-[#3C6350] to-[#E07A5F] p-1 cursor-pointer shadow-lg hover:shadow-2xl transition-all flex items-center justify-center ${
-                      isSealed ? "seal-pulse" : ""
-                    }`}
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#2F4F3E] via-[#3C6350] to-[#E07A5F] p-1 cursor-pointer shadow-lg hover:shadow-2xl transition-all flex items-center justify-center`}
                   >
                     <div className="w-full h-full rounded-full border border-dashed border-[#F4F1DE]/50 flex flex-col items-center justify-center text-[#F4F1DE]">
                       <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-[#E07A5F] text-[#E07A5F] mb-0.5 group-hover:scale-125 transition-transform" />

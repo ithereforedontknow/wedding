@@ -43,9 +43,9 @@ export default function FrontCover({ wedding }) {
           </div>
 
           <h1 className="mt-3 font-script leading-[1.05] text-[#2F4F3E] text-[clamp(2.4rem,16cqw,4.25rem)]">
-            {wedding.partner1}
-            <span className="block font-serif-elegant text-[0.4em] font-light leading-tight text-[#E07A5F]">&amp;</span>
             {wedding.partner2}
+            <span className="block font-serif-elegant text-[0.4em] font-light leading-tight text-[#E07A5F]">&amp;</span>
+            {wedding.partner1}
           </h1>
 
           <p className="mt-3 font-serif-elegant font-semibold uppercase tracking-[0.18em] text-[#2F4F3E] text-[clamp(0.72rem,3.4cqw,0.95rem)]">
