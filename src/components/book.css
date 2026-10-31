@@ -48,18 +48,7 @@
   transform: rotateY(180deg);
 }
 
-/* Spine shade: right pages darken at their left edge, left pages at their right edge. */
-.book-face::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(to right, rgba(47, 79, 62, 0.07), transparent 6%);
-}
-
-.book-face--back::after {
-  background: linear-gradient(to left, rgba(47, 79, 62, 0.07), transparent 6%);
-}
+/* No spine crease: the card is flat. */
 
 /* Paper: square corners, no drop shadow, a hairline border and a dashed inner frame. */
 .book-page {
@@ -97,6 +86,7 @@
 
 /* --- Page-turn polish --- */
 .book-shade {
+  display: none; /* curl shading while a page turns; remove this line to bring it back */
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -229,11 +219,6 @@
 
   .book-page {
     padding: 1.25rem;
-  }
-
-  /* One page at a time on phones: no spine, so no spine crease */
-  .book-face::after {
-    display: none;
   }
 
   .book-page::before {

@@ -51,4 +51,5 @@ export const WEDDING = {
   // Optional: paste a Formspree / Getform / your own API URL to receive RSVPs.
   // Leave empty to store RSVPs in the browser only (good for a demo).
   rsvpEndpoint: '',
+  coupleIllustration: { src: '/couple.svg', alt: 'Enjelaine and Erwin' },
 }

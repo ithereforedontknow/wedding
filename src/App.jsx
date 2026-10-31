@@ -44,7 +44,7 @@ const StyleInjector = () => (
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(224, 122, 95, 0.25);
-      box-shadow: 0 10px 30px -10px rgba(47, 79, 62, 0.08);
+      box-shadow: none;
     }
 
     .brushstroke-border {
@@ -491,7 +491,7 @@ export default function WeddingApp() {
           onClick={() => setIsPlayingMusic(!isPlayingMusic)}
           aria-label="Toggle background ambience"
           aria-pressed={isPlayingMusic}
-          className="flex items-center gap-2 px-3 py-2 rounded-full watercolor-card border border-[#E07A5F]/40 text-[#2F4F3E] hover:bg-white transition-all shadow-sm text-xs font-medium"
+          className="flex items-center gap-2 px-3 py-2 rounded-full watercolor-card border border-[#E07A5F]/40 text-[#2F4F3E] hover:bg-white transition-all text-xs font-medium"
         >
           {isPlayingMusic ? (
             <>

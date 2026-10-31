@@ -175,7 +175,7 @@ const GalleryPage = ({ wedding }) => (
 const GiftsPage = ({ wedding, onOpenRegistry }) => (
   <Page>
     <div className="space-y-5 text-center">
-      <div className="rounded-3xl border border-dashed border-[#E07A5F]/40 bg-white/50 p-6 shadow-sm">
+      <div className="rounded-3xl border border-dashed border-[#E07A5F]/40 bg-white/50 p-6">
         <Heart className="mx-auto mb-2 h-6 w-6 text-[#E07A5F]" />
         <h3 className="font-serif-elegant text-lg font-bold text-[#2F4F3E]">A Note on Gifts</h3>
         <p className="mt-1 text-xs leading-relaxed text-[#2F4F3E]/85">
@@ -224,7 +224,7 @@ const GuestbookPage = ({ wishes, onOpenWish }) => {
         <button
           type="button"
           onClick={onOpenWish}
-          className="inline-flex items-center gap-2 rounded-full bg-[#F2C94C] px-5 py-2 text-xs font-semibold uppercase tracking-wider text-[#2F4F3E] shadow-sm transition-all hover:bg-[#E6BB36]"
+          className="inline-flex items-center gap-2 rounded-full bg-[#F2C94C] px-5 py-2 text-xs font-semibold uppercase tracking-wider text-[#2F4F3E] transition-all hover:bg-[#E6BB36]"
         >
           <Send className="h-3.5 w-3.5" />
           Leave a Blessing
@@ -236,9 +236,9 @@ const GuestbookPage = ({ wishes, onOpenWish }) => {
           <div
             key={wish.id}
             style={{ backgroundColor: wish.color }}
-            className="relative rounded-2xl border border-[#E07A5F]/30 p-4 pt-5 shadow-[0_12px_30px_-24px_rgba(47,79,62,0.4)]"
+            className="relative rounded-2xl border border-[#E07A5F]/30 p-4 pt-5"
           >
-            <div className="absolute -top-2 left-1/2 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border border-white bg-[#E07A5F] shadow-sm">
+            <div className="absolute -top-2 left-1/2 flex h-4 w-4 -translate-x-1/2 items-center justify-center rounded-full border border-white bg-[#E07A5F]">
               <div className="h-1.5 w-1.5 rounded-full bg-white" />
             </div>
             <p className="font-serif-elegant text-sm italic leading-relaxed text-[#2F4F3E]">"{wish.message}"</p>
@@ -294,7 +294,7 @@ const RsvpPage = ({ wedding, onOpenRsvp, rsvpButtonRef }) => (
         ref={rsvpButtonRef}
         type="button"
         onClick={onOpenRsvp}
-        className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-[#F2C94C] px-8 py-4 text-sm font-bold uppercase tracking-widest text-[#2F4F3E] shadow-lg transition-all hover:-translate-y-0.5 hover:bg-[#E6BB36] hover:shadow-xl"
+        className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-[#F2C94C] px-8 py-4 text-sm font-bold uppercase tracking-widest text-[#2F4F3E] transition-all hover:-translate-y-0.5 hover:bg-[#E6BB36]"
       >
         <Send className="h-4 w-4" />
         Open Reply Card

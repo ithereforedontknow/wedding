@@ -20,7 +20,7 @@ export default function FrontCover({ wedding }) {
             <img
               src={art.src}
               alt={art.alt ?? `${wedding.partner1} and ${wedding.partner2}`}
-              className="max-h-full max-w-full object-contain"
+              className="max-h-70 max-w-70 object-contain"
               draggable="false"
             />
           ) : (
