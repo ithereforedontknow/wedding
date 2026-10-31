@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
 import FrontCover from "./FrontCover";
 import { useBookTimeline } from "../hooks/useBookTimeline";
@@ -108,6 +108,105 @@ export default function Book({ wedding, leaves, controlRef }) {
     });
   });
 
+  // Move one rest point forward (+1) or back (-1). Rapid gestures build on the
+  // last target instead of the (still scrolling) current page, so two quick swipes go two pages.
+  const lastStep = useRef({ target: 0, at: 0 });
+  const step = useCallback(
+    (dir) => {
+      const now = performance.now();
+      const base = now - lastStep.current.at < 900 ? lastStep.current.target : activeRef.current;
+      const next = Math.max(0, Math.min(stops.length - 1, base + dir));
+      if (next === base) return;
+      lastStep.current = { target: next, at: now };
+      goToStop(next);
+    },
+    [goToStop, stops.length]
+  );
+
+  // Swipe (touch), drag (mouse / pen) and horizontal trackpad scroll turn the page.
+  // Left = next page, right = previous page. Vertical scrolling is untouched.
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (fallback || !root) return undefined;
+
+    const ignore = (target) =>
+      document.querySelector('[role="dialog"]') || target?.closest?.("input, textarea, select, [contenteditable='true']");
+
+    let start = null;
+    let swallowClickUntil = 0;
+
+    const onDown = (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (ignore(event.target)) return;
+      start = { x: event.clientX, y: event.clientY, type: event.pointerType, id: event.pointerId };
+    };
+
+    const onMove = (event) => {
+      if (!start || event.pointerId !== start.id) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      // A mouse drag that is clearly horizontal must not select text while it happens.
+      if (start.type === "mouse" && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+        window.getSelection?.()?.removeAllRanges();
+      }
+    };
+
+    const onUp = (event) => {
+      if (!start || event.pointerId !== start.id) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      const needed = start.type === "mouse" ? 80 : 50;
+      start = null;
+      if (Math.abs(dx) < needed || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+      swallowClickUntil = performance.now() + 60; // the drag must not also "click" a button
+      step(dx < 0 ? 1 : -1);
+    };
+
+    const onCancel = () => {
+      start = null;
+    };
+
+    const onClickCapture = (event) => {
+      if (performance.now() < swallowClickUntil) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    };
+
+    // Two-finger horizontal swipe on a trackpad (or a tilt wheel)
+    let wheelSum = 0;
+    let wheelTimer = 0;
+    let wheelLockedUntil = 0;
+    const onWheel = (event) => {
+      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
+      if (ignore(event.target) || performance.now() < wheelLockedUntil) return;
+      wheelSum += event.deltaX;
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => (wheelSum = 0), 160);
+      if (Math.abs(wheelSum) > 90) {
+        step(wheelSum > 0 ? 1 : -1);
+        wheelSum = 0;
+        wheelLockedUntil = performance.now() + 700;
+      }
+    };
+
+    root.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
+    root.addEventListener("click", onClickCapture, true);
+    root.addEventListener("wheel", onWheel, { passive: true });
+    return () => {
+      clearTimeout(wheelTimer);
+      root.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      root.removeEventListener("click", onClickCapture, true);
+      root.removeEventListener("wheel", onWheel);
+    };
+  }, [fallback, step]);
+
   // Arrow keys / Page Up / Page Down move between rest points.
   useEffect(() => {
     if (fallback) return undefined;
@@ -119,16 +218,16 @@ export default function Book({ wedding, leaves, controlRef }) {
 
       if (event.key === "ArrowRight" || event.key === "PageDown") {
         event.preventDefault();
-        goToStop(activeRef.current + 1);
+        step(1);
       } else if (event.key === "ArrowLeft" || event.key === "PageUp") {
         event.preventDefault();
-        goToStop(activeRef.current - 1);
+        step(-1);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [fallback, goToStop]);
+  }, [fallback, step]);
 
   // Let the rest of the app jump to a page by name.
   useEffect(() => {
