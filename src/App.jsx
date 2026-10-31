@@ -294,6 +294,14 @@ const CountdownBadge = ({ targetDate }) => {
   );
 };
 
+// Envelope opening timings (ms). The CSS transitions in index.css are
+// tuned to match these phase durations.
+const ENVELOPE_TIMING = {
+  unsealing: 3000,
+  revealing: 900,
+  reduced: 120
+};
+
 // --- Main App Component ---
 export default function WeddingApp() {
   // Envelope opening phases: sealed -> unsealing -> revealing -> opened
@@ -307,6 +315,7 @@ export default function WeddingApp() {
 
   // Audio atmosphere simulation toggle
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+  const ambienceRef = useRef(null);
 
   // Refs for focus management: the RSVP submit button regains focus
   // when the pass modal closes; the modal close button takes focus on open.
@@ -339,7 +348,7 @@ export default function WeddingApp() {
     if (phase !== "unsealing" && phase !== "revealing") return;
 
     const reduced = prefersReducedMotion.current;
-    const delay = phase === "unsealing" ? (reduced ? 120 : 1150) : (reduced ? 120 : 550);
+    const delay = reduced ? ENVELOPE_TIMING.reduced : ENVELOPE_TIMING[phase];
 
     const timer = setTimeout(() => {
       setPhase((current) =>
@@ -461,6 +470,19 @@ export default function WeddingApp() {
     };
   }, [showPassModal]);
 
+  // Play or pause the looping ambience track when the toggle changes.
+  useEffect(() => {
+    const audio = ambienceRef.current;
+    if (!audio) return;
+
+    if (isPlayingMusic) {
+      audio.volume = 0.35;
+      audio.play().catch(() => setIsPlayingMusic(false));
+    } else {
+      audio.pause();
+    }
+  }, [isPlayingMusic]);
+
   // Google Calendar Link Generator
   const generateGoogleCalendarUrl = () => {
     return buildGoogleCalendarUrl(WEDDING);
@@ -485,10 +507,18 @@ export default function WeddingApp() {
       <StyleInjector />
       <WatercolorPetalsCanvas active={isRevealing || isOpened} />
 
+      {/* Looping background ambience track */}
+      <audio
+        ref={ambienceRef}
+        src="/theshire.mp3"
+        loop
+        preload="none"
+      />
+
       {/* Background Ambience Audio Toggle Button */}
       <div className="fixed top-5 right-5 z-40">
         <button
-          onClick={() => setIsPlayingMusic(!isPlayingMusic)}
+          onClick={() => setIsPlayingMusic((playing) => !playing)}
           aria-label="Toggle background ambience"
           aria-pressed={isPlayingMusic}
           className="flex items-center gap-2 px-3 py-2 rounded-full watercolor-card border border-[#E07A5F]/40 text-[#2F4F3E] hover:bg-white transition-all text-xs font-medium"

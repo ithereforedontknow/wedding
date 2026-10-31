@@ -158,7 +158,7 @@ html {
 .envelope-flap {
   transform-origin: top center;
   transform-style: preserve-3d;
-  transition: transform 700ms cubic-bezier(0.4, 0, 0.2, 1) 100ms;
+  transition: transform 1100ms cubic-bezier(0.4, 0, 0.2, 1) 150ms;
   will-change: transform;
 }
 
@@ -180,8 +180,8 @@ html {
   opacity: 0;
   transform: translateY(16px);
   transition:
-    transform 750ms cubic-bezier(0.16, 1, 0.3, 1) 320ms,
-    opacity 400ms ease-out 380ms;
+    transform 1200ms cubic-bezier(0.16, 1, 0.3, 1) 500ms,
+    opacity 600ms ease-out 550ms;
   will-change: transform, opacity;
 }
 
@@ -191,7 +191,7 @@ html {
 }
 
 .envelope-seal {
-  transition: transform 280ms ease-out, opacity 280ms ease-out;
+  transition: transform 450ms ease-out, opacity 450ms ease-out;
 }
 
 .envelope-seal.is-broken {
@@ -201,7 +201,7 @@ html {
 }
 
 .envelope-caption {
-  transition: transform 450ms ease-out, opacity 450ms ease-out;
+  transition: transform 700ms ease-out, opacity 700ms ease-out;
 }
 
 .envelope-caption.is-leaving {
@@ -210,7 +210,7 @@ html {
 }
 
 .envelope-overlay {
-  transition: opacity 500ms ease-out;
+  transition: opacity 850ms ease-out;
 }
 
 .envelope-overlay.is-revealing {
@@ -219,7 +219,7 @@ html {
 }
 
 .envelope-stage-shell {
-  transition: transform 420ms ease-out, opacity 300ms ease-out;
+  transition: transform 700ms ease-out, opacity 500ms ease-out;
 }
 
 .envelope-stage-shell.is-revealing {
